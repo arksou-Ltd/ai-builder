@@ -1,24 +1,25 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `backend/app-api/`: FastAPI service with `app/` (routers, models, services), `migrations/`, and `tests/`.
-- `frontend/app-flutter/`: Flutter app with `lib/src/` (core + feature modules), `assets/`, and `test/`.
+- `backend/app-api/`: FastAPI service with `src/api/app/` (routers, models, services), `migrations/`, and `tests/`.
+- `frontend/app-web/`: Next.js app with `app/` (App Router), `components/`, `lib/`, and `providers/`.
 - `docs/`: product, planning, and implementation references.
 - `docs/3-solutioning/architecture/index.md`: architecture reference index.
-- `bmad/`: BMAD workflows, templates, and configuration.
+- `_bmad/`: BMAD workflows, templates, and configuration.
+- `_bmad-output/`: BMAD generated artifacts (planning/implementation outputs).
 
 ## Build, Test, and Development Commands
 - Backend: `pip install -r requirements.txt`, `uvicorn app.main:app --reload`, `ruff check .`, `ruff format .`, `mypy app/`, `pytest`, `alembic upgrade head`.
-- Frontend: `flutter pub get`, `flutter pub run build_runner build --delete-conflicting-outputs`, `flutter run`, `flutter analyze`, `flutter format .`, `flutter test`.
+- Frontend: `npm install`, `npm run dev`, `npm run lint`, `npx prettier --check .`.
 
 ## Coding Style & Naming Conventions
 - Python uses Ruff for formatting/linting and mypy for typing.
-- Dart uses `flutter format` and `flutter analyze`; generated files must be committed when required.
-- Use English identifiers only. File naming: `snake_case` for Python, `lower_snake_case` for Dart; classes use `UpperCamelCase`.
+- TypeScript uses ESLint/Prettier; generated files must be committed when required.
+- Use English identifiers only. File naming: `snake_case` for Python; classes use `UpperCamelCase`.
 
 ## Testing Guidelines
 - Backend tests use `pytest` in `backend/app-api/tests/` and integration tests in `backend/app-api/tests/integration/`.
-- Frontend tests run via `flutter test` in `frontend/app-flutter/test/`.
+- Frontend tests run via `npm test` in `frontend/app-web/`.
 - No mocks or test doubles; use real databases, providers, repositories, and APIs.
 
 ## Commit & Pull Request Guidelines
