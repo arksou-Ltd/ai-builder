@@ -7,10 +7,10 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from arksou.kernel.framework.base import Result
+from arksou.kernel.framework.base import BaseSchema, Result
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from api.app.core.config import settings
 from api.app.core.exceptions import register_exception_handlers
@@ -58,7 +58,7 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.api_prefix)
 
 
-class HealthData(BaseModel):
+class HealthData(BaseSchema):
     """健康检查数据模型。"""
 
     status: str = Field(

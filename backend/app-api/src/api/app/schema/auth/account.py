@@ -3,10 +3,11 @@
 定义账户相关的请求和响应数据结构。
 """
 
-from pydantic import BaseModel, Field
+from arksou.kernel.framework.base import BaseSchema
+from pydantic import Field
 
 
-class AccountResponse(BaseModel):
+class AccountResponse(BaseSchema):
     """账户信息响应模型。
 
     用于 /auth/me 端点返回当前用户信息。
