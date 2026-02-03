@@ -1,6 +1,6 @@
 # Story 1.2: backend-workspace-init
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -19,16 +19,16 @@ so that 我可以基于统一的 Python workspace 与模块结构开始后端开
    - [ ] `backend/common-kernel/` 模块创建完成
    - [ ] `backend/common-kernel/src/kernel/common/` 目录存在，包含 `enums/` 与 `models/` 基础分组
    - [ ] `backend/app-api/` 模块创建完成，且代码根路径为 `backend/app-api/src/api/app/`
-   - [ ] `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`router/`、`service/`、`schema/`
+   - [ ] `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`routers/`、`services/`、`schemas/`
    - [ ] `backend/app-api/src/api/app/core/` 至少包含 `config.py`、`database.py`、`exceptions.py`
    - [ ] `backend/app-api/src/api/app/deps/` 至少包含 `auth.py`、`database.py`
-   - [ ] `backend/app-api/src/api/app/router/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
-   - [ ] `backend/app-api/src/api/app/service/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
-   - [ ] `backend/app-api/src/api/app/schema/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
+   - [ ] `backend/app-api/src/api/app/routers/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
+   - [ ] `backend/app-api/src/api/app/services/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
+   - [ ] `backend/app-api/src/api/app/schemas/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
    - [ ] `backend/app-api/pyproject.toml` 定义 `app-api = "api.app.main:main"` 的启动入口
    - [ ] `backend/app-api` 使用 `src/api` 作为 wheel packages（命名空间包路径一致）
-   - [ ] `backend/app-api` 可启动并提供 `GET /health` 返回成功
-   - [ ] `backend/app-api` 可启动并提供 `GET /auth/me` 返回成功，且与 `/health` 一致使用 `Result[T]` 统一响应契约
+   - [ ] `backend/app-api` 可启动并提供 `GET /api/health` 返回成功
+   - [ ] `backend/app-api` 可启动并提供 `GET /api/v1/auth/me` 返回成功，且与 `/api/health` 一致使用 `Result[T]` 统一响应契约
    - [ ] workspace members 正确声明为 `["common-kernel", "app-api"]`（不包含 `agent-kernel`）
    - [ ] `app-api` 依赖包含数据库接入基线：`sqlalchemy[asyncio]>=2.0.46`、`asyncpg>=0.30.0`、`alembic>=1.17.0`
    - [ ] `app-api` 的 Schema（示例：`AccountResponse`）必须继承框架 `BaseSchema`（禁止直接使用 `pydantic.BaseModel` 作为 DTO 基类）
@@ -39,11 +39,20 @@ so that 我可以基于统一的 Python workspace 与模块结构开始后端开
   - [x] 创建 `backend/pyproject.toml` 与 `backend/.python-version`（内容：`3.12`）
   - [x] 创建 `common-kernel` 目录与 `src/kernel/common/` 基础结构
 - [x] 建立 app-api 基础结构（AC: 1）
-  - [x] 创建 `app-api/src/api/app/` 与 `core/`、`deps/`、`router/`、`service/`、`schema/`
-  - [x] 实现 `main.py` 与 `GET /health` 端点
+  - [x] 创建 `app-api/src/api/app/` 与 `core/`、`deps/`、`routers/`、`services/`、`schemas/`
+  - [x] 实现 `main.py` 与 `GET /api/health` 端点
   - [x] 确认 `app-api` 不创建 `models/` 包
 - [x] 预留测试目录结构
   - [x] 创建 `backend/app-api/tests/` 目录与 `conftest.py`
+
+### Review Follow-ups (Code Review 2026-02-03)
+
+- [x] [HIGH] 修复 API 路径规范：/health → /api/health，/auth/me → /api/v1/auth/me
+- [x] [HIGH] 修复伪认证安全隐患：x-account-id header 限制仅 debug 模式生效
+- [x] [MEDIUM] 添加 smoke tests：GET /api/health 和 GET /api/v1/auth/me 集成测试
+- [x] [MEDIUM] 统一架构文档口径：更新 architecture.md 和 project-context.md
+- [x] [LOW] 修复 lifespan() 类型签名：Any → AsyncIterator[None]
+- [x] [LOW] 修复默认数据库密码安全策略：默认值改为空字符串
 
 ## Dev Notes
 
@@ -98,16 +107,18 @@ uv sync
 uv pip list | grep arksou-kernel-framework
 uv pip list | grep fastapi
 python -c "from kernel.common import __version__; print(__version__)"
-python -c "from api.app.main import create_app; print(create_app)"
+python -c "from api.app.main import app; print(app)"
 ```
 
-### /health 响应格式
+### /api/health 响应格式
 
 ```json
 {
-  "code": 2000000,
+  "code": { "value": 2000000, "desc": "操作成功" },
   "data": { "status": "healthy" },
-  "message": "success"
+  "message": "",
+  "request_id": "...",
+  "timestamp": 1700000000
 }
 ```
 
@@ -124,14 +135,14 @@ python -c "from api.app.main import create_app; print(create_app)"
 🔴 HIGH
 
 - 统一响应契约被破坏：`GET /auth/me` 直接返回业务 Schema
-  - 风险：违反“统一响应与异常体系使用框架能力”的约束；接口响应与 `GET /health` 不一致，客户端对接会出现契约分裂。
-  - 位置：`backend/app-api/src/api/app/router/auth/me.py`
+- 风险：违反“统一响应与异常体系使用框架能力”的约束；接口响应与 `GET /api/health` 不一致，客户端对接会出现契约分裂。
+  - 位置：`backend/app-api/src/api/app/routers/auth/me.py`
 
 🟡 MEDIUM
 
 - Schema 未使用框架 `BaseSchema`
   - 风险：违反项目约束“app-api 直接导入框架 BaseSchema”；DTO 基类不统一会导致响应/校验/文档策略分叉。
-  - 位置：`backend/app-api/src/api/app/schema/auth/account.py`
+  - 位置：`backend/app-api/src/api/app/schemas/auth/account.py`
 
 ### Resolution
 
@@ -150,7 +161,7 @@ python -c "from api.app.main import create_app; print(create_app)"
 
 - 后端采用 uv workspace 分层结构：`backend/` 为根，成员为 `common-kernel` 与 `app-api`。
 - `common-kernel` 仅承载公共模型/枚举/框架透传，不放业务逻辑与 Router；必须包含 models 以便后续复用。
-- `app-api` 负责 FastAPI 应用，目录必须包含：`core/`、`deps/`、`router/`、`service/`、`schema/`。
+- `app-api` 负责 FastAPI 应用，目录必须包含：`core/`、`deps/`、`routers/`、`services/`、`schemas/`。
 - `app-api` **不创建** `models/` 包，所有模型统一放在 `common-kernel` 下并从 `kernel.common` 导入。
 - `core/` 必须包含 `config.py`、`database.py`、`exceptions.py`（注意：`clerk.py` 在后续 Story 创建）。
 - `deps/` 必须包含 `auth.py`、`database.py`。
@@ -308,17 +319,17 @@ backend/
         │   ├── __init__.py
         │   ├── auth.py               # 认证依赖（预留骨架）
         │   └── database.py           # 数据库会话依赖
-        ├── router/
+        ├── routers/
         │   ├── __init__.py
         │   └── auth/
         │       ├── __init__.py
         │       └── me.py             # /auth/me 路由示例
-        ├── service/
+        ├── services/
         │   ├── __init__.py
         │   └── auth/
         │       ├── __init__.py
         │       └── auth_service.py   # 示例 service
-        └── schema/
+        └── schemas/
             ├── __init__.py
             └── auth/
                 ├── __init__.py
@@ -349,7 +360,7 @@ backend/
 
 ## Story Completion Status
 
-Status: review
+Status: done
 
 Completion Note: Story 实现完成 - 所有 AC 验证通过，Definition of Done 检查通过
 
@@ -366,7 +377,7 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 ### Completion Notes List
 
 - 2026-02-03: 验证并确认所有后端骨架结构已正确创建
-- 2026-02-03: 修复 /health 端点使用框架统一响应格式 Result.success()
+- 2026-02-03: 修复 /api/health 端点使用框架统一响应格式 Result.success()
 - 2026-02-03: 验证 PEP 420 命名空间包规则 - 禁止的 __init__.py 不存在
 - 2026-02-03: 验证 workspace members 配置正确 ["common-kernel", "app-api"]
 - 2026-02-03: 验证数据库依赖 sqlalchemy[asyncio], asyncpg, alembic 已配置
@@ -381,9 +392,16 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
   - ✅ 框架 Result/BaseSchema 导入成功
   - ✅ HealthData 继承 BaseSchema
   - ✅ AccountResponse 继承 BaseSchema
-  - ✅ /health 端点存在
+  - ✅ /api/health 端点存在
   - ✅ /api/v1/auth/me 端点存在
-- 2026-02-03: [Dev] Story 状态更新为 review
+- 2026-02-03: [Dev] Story 状态更新为 done
+- 2026-02-03: [Code Review] 修复 HIGH - API 路径规范化：/health → /api/health
+- 2026-02-03: [Code Review] 修复 HIGH - 伪认证限制到 debug 模式
+- 2026-02-03: [Code Review] 修复 MEDIUM - 添加 smoke tests (test_smoke.py)
+- 2026-02-03: [Code Review] 修复 MEDIUM - 统一架构文档 (architecture.md, project-context.md)
+- 2026-02-03: [Code Review] 修复 LOW - lifespan 类型签名改为 AsyncIterator[None]
+- 2026-02-03: [Code Review] 修复 LOW - 数据库默认密码改为空字符串
+- 2026-02-03: [Code Review] 所有 4 个 smoke tests 通过
 
 ### File List
 
@@ -403,16 +421,17 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - backend/app-api/src/api/app/deps/__init__.py
 - backend/app-api/src/api/app/deps/auth.py
 - backend/app-api/src/api/app/deps/database.py
-- backend/app-api/src/api/app/router/__init__.py
-- backend/app-api/src/api/app/router/auth/__init__.py
-- backend/app-api/src/api/app/router/auth/me.py
-- backend/app-api/src/api/app/schema/__init__.py
-- backend/app-api/src/api/app/schema/auth/__init__.py
-- backend/app-api/src/api/app/schema/auth/account.py
-- backend/app-api/src/api/app/service/__init__.py
-- backend/app-api/src/api/app/service/auth/__init__.py
-- backend/app-api/src/api/app/service/auth/auth_service.py
+- backend/app-api/src/api/app/routers/__init__.py
+- backend/app-api/src/api/app/routers/auth/__init__.py
+- backend/app-api/src/api/app/routers/auth/me.py
+- backend/app-api/src/api/app/schemas/__init__.py
+- backend/app-api/src/api/app/schemas/auth/__init__.py
+- backend/app-api/src/api/app/schemas/auth/account.py
+- backend/app-api/src/api/app/services/__init__.py
+- backend/app-api/src/api/app/services/auth/__init__.py
+- backend/app-api/src/api/app/services/auth/auth_service.py
 - backend/app-api/tests/__init__.py
+- backend/app-api/tests/test_smoke.py
 - backend/common-kernel/pyproject.toml
 - backend/common-kernel/README.md
 - backend/common-kernel/src/kernel/common/__init__.py
@@ -421,3 +440,9 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 **修改文件：**
 - .gitignore
+- backend/app-api/src/api/app/main.py (Code Review: /api/health 路径 + lifespan 类型)
+- backend/app-api/src/api/app/deps/auth.py (Code Review: debug 模式限制)
+- backend/app-api/src/api/app/core/config.py (Code Review: 默认密码安全策略)
+- _bmad-output/planning-artifacts/architecture.md (Code Review: 统一 API 路径文档)
+- _bmad-output/project-context.md (Code Review: 统一 API 路径和响应格式文档)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (Story 状态更新为 done)

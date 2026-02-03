@@ -3,26 +3,26 @@
 此模块为后端服务的主入口点，配置 FastAPI 应用实例和路由。
 """
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any
 
 import uvicorn
 from arksou.kernel.framework.base import BaseSchema, Result
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import Field
 
 from api.app.core.config import settings
 from api.app.core.exceptions import register_exception_handlers
-from api.app.router import router as api_router
+from api.app.routers import router as api_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> Any:
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """应用生命周期管理。
 
     Args:
-        app: FastAPI 应用实例
+        _app: FastAPI 应用实例（未使用，以 _ 前缀标记）
 
     Yields:
         None
@@ -54,9 +54,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 注册 API 路由
-app.include_router(api_router, prefix=settings.api_prefix)
-
 
 class HealthData(BaseSchema):
     """健康检查数据模型。"""
@@ -67,9 +64,12 @@ class HealthData(BaseSchema):
     )
 
 
-@app.get(
+# 系统路由（/api 前缀，不含版本号）
+system_router = APIRouter(prefix="/api", tags=["系统"])
+
+
+@system_router.get(
     "/health",
-    tags=["系统"],
     summary="健康检查",
     description="检查服务是否正常运行，返回统一响应格式",
 )
@@ -80,6 +80,13 @@ async def health_check() -> Result[HealthData]:
         Result[HealthData]: 使用框架统一响应格式的健康状态
     """
     return Result.success(data=HealthData(status="healthy"))
+
+
+# 注册系统路由（/api/health）
+app.include_router(system_router)
+
+# 注册业务 API 路由（/api/v1/...）
+app.include_router(api_router, prefix=settings.api_prefix)
 
 
 def main() -> None:

@@ -1,11 +1,11 @@
-"""api.app.router.auth - 认证模块路由。
+"""api.app.routers.auth - 认证模块路由。
 
 提供用户身份认证相关的 API 端点。
 """
 
 from fastapi import APIRouter
 
-from api.app.router.auth.me import router as me_router
+from api.app.routers.auth.me import router as me_router
 
 router = APIRouter()
 

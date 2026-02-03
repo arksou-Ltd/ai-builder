@@ -271,12 +271,12 @@ So that 我可以基于统一的 Python workspace 与模块结构开始后端开
 **And** `backend/common-kernel/` 模块创建完成
 **And** `backend/common-kernel/src/kernel/common/` 目录存在，包含 `enums/` 与 `models/` 基础分组
 **And** `backend/app-api/` 模块创建完成，且代码根路径为 `backend/app-api/src/api/app/`
-**And** `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`router/`、`service/`、`schema/`
+**And** `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`routers/`、`services/`、`schemas/`
 **And** `backend/app-api/src/api/app/core/` 至少包含 `config.py`、`database.py`、`exceptions.py`
 **And** `backend/app-api/src/api/app/deps/` 至少包含 `auth.py`、`database.py`
-**And** `backend/app-api/src/api/app/router/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
-**And** `backend/app-api/src/api/app/service/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
-**And** `backend/app-api/src/api/app/schema/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
+**And** `backend/app-api/src/api/app/routers/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
+**And** `backend/app-api/src/api/app/services/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
+**And** `backend/app-api/src/api/app/schemas/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
 **And** `backend/app-api/pyproject.toml` 定义 `app-api = "api.app.main:main"` 的启动入口
 **And** `backend/app-api` 使用 `src/api` 作为 wheel packages（命名空间包路径一致）
 **And** `backend/app-api` 可启动并提供 `GET /health` 返回成功

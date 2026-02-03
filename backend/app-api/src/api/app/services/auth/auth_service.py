@@ -3,7 +3,7 @@
 提供用户认证相关的业务逻辑处理。
 """
 
-from api.app.schema.auth.account import AccountResponse
+from api.app.schemas.auth.account import AccountResponse
 
 
 class AuthService:

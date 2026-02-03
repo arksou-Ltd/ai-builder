@@ -174,25 +174,23 @@ ai-builder/
 │           │   ├── __init__.py
 │           │   ├── auth.py           # 认证依赖
 │           │   └── database.py       # 数据库会话依赖
-│           ├── router/               # API 路由层 (按模块分组)
+│           ├── routers/              # API 路由层 (按模块分组)
 │           │   ├── __init__.py
 │           │   └── auth/
 │           │       ├── __init__.py
-│           │       └── me.py         # /auth/me 路由
-│           ├── service/              # 业务逻辑层 (按模块分组)
+│           │       └── me.py         # /api/v1/auth/me 路由
+│           ├── services/             # 业务逻辑层 (按模块分组)
 │           │   ├── __init__.py
 │           │   └── auth/
 │           │       ├── __init__.py
 │           │       ├── auth_service.py
 │           │       └── account_service.py
-│           ├── schema/               # 请求/响应 Schema (按模块分组)
+│           ├── schemas/              # 请求/响应 Schema (按模块分组)
 │           │   ├── __init__.py
 │           │   └── auth/
 │           │       ├── __init__.py
 │           │       ├── account.py
 │           │       └── enterprise.py
-│           └── model/                # app-api 特有模型 (通常为空)
-│               └── __init__.py       # 核心模型在 kernel.common.models
 ├── frontend/                         # Next.js 前端
 │   └── app-web/
 │       ├── package.json
@@ -215,7 +213,7 @@ ai-builder/
 | **数据模型** | 按模块分组 | `models/auth/account.py` |
 | **Schema** | 按模块分组 + 用途后缀 | `AccountUpdate`, `AccountMeResponse` |
 | **Service** | 按模块分组 + `_service` 后缀 | `auth_service.py`, `account_service.py` |
-| **Router** | 按模块分组 | `router/auth/me.py` |
+| **Router** | 按模块分组 | `routers/auth/me.py` |
 | **表名** | `{module}_{entity}` 复数形式 | `auth_accounts`, `auth_enterprises` |
 | **枚举** | PascalCase + str,Enum 继承 | `MembershipRole(str, Enum)` |
 
@@ -1026,7 +1024,7 @@ async def require_github_authorized(
 #### 校验项与实现
 
 ```python
-# service/ai_channel_validator.py
+# services/ai_channel_validator.py
 from enum import Enum
 from dataclasses import dataclass
 
@@ -1467,7 +1465,7 @@ class TestDataIsolation:
 
 **Structure Alignment（结构对齐）：** ✅ 对齐
 
-- 后端/前端结构描述足以指导工程落地（模块边界、schema/service/router 分层清晰）
+- 后端/前端结构描述足以指导工程落地（模块边界、schemas/services/routers 分层清晰）
 - 可以支撑工作流引擎、沙箱调度与实时推送
 
 ### Requirements Coverage Validation ✅

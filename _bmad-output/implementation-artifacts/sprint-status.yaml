@@ -43,7 +43,7 @@ development_status:
   # Epic 1: Project Bootstrap (Monorepo Starter)
   epic-1: in-progress
   1-1-frontend-project-init: done
-  1-2-backend-workspace-init: review
+  1-2-backend-workspace-init: done
   1-3-dependency-chain-setup: backlog
   epic-1-retrospective: optional
 

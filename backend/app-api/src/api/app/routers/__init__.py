@@ -1,11 +1,11 @@
-"""api.app.router - API 路由模块。
+"""api.app.routers - API 路由模块。
 
 按模块分组组织 API 端点。
 """
 
 from fastapi import APIRouter
 
-from api.app.router.auth import router as auth_router
+from api.app.routers.auth import router as auth_router
 
 # 主路由器
 router = APIRouter()

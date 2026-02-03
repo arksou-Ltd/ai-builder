@@ -7,8 +7,8 @@ from arksou.kernel.framework.base import Result
 from fastapi import APIRouter
 
 from api.app.deps.auth import CurrentAccountId
-from api.app.schema.auth.account import AccountResponse
-from api.app.service.auth.auth_service import AuthService
+from api.app.schemas.auth.account import AccountResponse
+from api.app.services.auth.auth_service import AuthService
 
 router = APIRouter()
 

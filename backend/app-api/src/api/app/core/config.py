@@ -33,10 +33,11 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
 
     # 数据库配置
+    # 注意：生产环境必须通过环境变量设置，默认值仅供本地开发
     database_host: str = "localhost"
     database_port: int = 5432
     database_user: str = "postgres"
-    database_password: str = "postgres"
+    database_password: str = ""  # 必须通过 DATABASE_PASSWORD 环境变量设置
     database_name: str = "ai_builder"
 
     @computed_field  # type: ignore[prop-decorator]

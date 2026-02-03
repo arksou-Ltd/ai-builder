@@ -79,10 +79,10 @@ _此文件包含 AI 代理在此项目中实现代码时必须遵循的关键规
 - ✅ 结构化日志 `get_logger()` + 敏感信息脱敏
 
 **分层架构：**
-- `router/` - API 路由层，按模块分组 (e.g., `router/auth/me.py`)
-- `service/` - 业务逻辑层，`*_service.py` 命名
-- `schema/` - 请求/响应 Schema，按模块分组
-- `model/` - 数据模型（核心模型在 `kernel.common.models`）
+- `routers/` - API 路由层，按模块分组 (e.g., `routers/auth/me.py` → `/api/v1/auth/me`)
+- `services/` - 业务逻辑层，`*_service.py` 命名
+- `schemas/` - 请求/响应 Schema，按模块分组
+- 数据模型统一放在 `kernel.common.models`（app-api 禁止创建 model/ 目录）
 
 **数据隔离强制（ADR-014）：**
 - 所有用户数据表必须包含 `account_id` 字段
@@ -212,7 +212,7 @@ def postgres_container():
 feat(backend:app-api): 实现用户认证接口
 
 - 添加 Clerk JWT 验证依赖
-- 实现 /auth/me 端点返回当前用户信息
+- 实现 /api/v1/auth/me 端点返回当前用户信息
 ```
 
 #### 分支策略
@@ -275,14 +275,14 @@ raise BusinessException("用户未授权 GitHub 仓库访问")
 raise NotFoundException(f"项目 {project_id} 不存在")
 ```
 
-**API 响应格式：**
+**API 响应格式（框架 Result[T] 输出）：**
 ```json
 {
-  "code": 2000000,
+  "code": { "value": 2000000, "desc": "操作成功" },
   "data": { ... },
-  "message": "success",
+  "message": "",
   "request_id": "...",
-  "timestamp": "..."
+  "timestamp": 1700000000
 }
 ```
 
@@ -321,10 +321,9 @@ ai-builder/
 │       └── src/api/app/              # 包路径: api.app
 │           ├── core/                 # 核心配置
 │           ├── deps/                 # FastAPI 依赖注入
-│           ├── router/               # API 路由层
-│           ├── service/              # 业务逻辑层
-│           ├── schema/               # 请求/响应 Schema
-│           └── model/                # app-api 特有模型
+│           ├── routers/              # API 路由层
+│           ├── services/             # 业务逻辑层
+│           └── schemas/              # 请求/响应 Schema
 ├── frontend/                         # Next.js 前端
 │   └── app-web/
 │       ├── app/                      # App Router
