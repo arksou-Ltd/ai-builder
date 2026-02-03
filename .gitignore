@@ -32,3 +32,11 @@ Thumbs.db
 # 本地配置
 .env.local
 .env.*.local
+
+# Node.js / Frontend
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
