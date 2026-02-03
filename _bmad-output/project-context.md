@@ -149,21 +149,16 @@ def postgres_container():
 
 #### 命名规范
 
-**文件/文件夹命名（必须英文）：**
+**文件/文件夹命名：**
 - Python：`snake_case` (e.g., `auth_service.py`)
 - TypeScript：`kebab-case` 或 `PascalCase` (e.g., `user-profile.tsx`, `UserProfile.tsx`)
 - 目录：`kebab-case` (e.g., `user-management/`)
 
-**代码标识符（必须英文）：**
+**代码标识符：**
 - 变量/函数：`snake_case` (Python) / `camelCase` (TypeScript)
 - 类/类型：`PascalCase`
 - 常量：`UPPER_SNAKE_CASE`
 - 数据库表：`{module}_{entity}` 复数形式 (e.g., `auth_accounts`, `workflow_stories`)
-
-**注释/文档（必须中文）：**
-- 所有代码注释使用中文
-- Docstring 使用中文
-- README 和文档使用中文
 
 #### Linting & Formatting
 
@@ -189,7 +184,7 @@ def postgres_container():
 
 #### Git Commit 规范
 
-**格式（必须中文）：**
+**格式：**
 ```
 <type>(<layer:module>): <subject>
 

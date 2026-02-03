@@ -28,7 +28,7 @@
 - Update docs when behavior or architecture changes.
 
 ## AI Assistant Project Guidelines
-This document standardizes AI assistant behavior and output for this project. Markdown headings must be in English, and Markdown body content must be in Chinese. Filenames remain in English to meet naming requirements.
+This document standardizes AI assistant behavior and output for this project. Default language is English. See Rule 4 for special language rules.
 
 ### Mandatory Rules (Must Follow)
 
@@ -49,13 +49,19 @@ All code identifiers must be in English.
 
 - Variables, functions, methods, classes, interfaces, types, constants, enum values, modules, package names
 
-#### Rule 4: Content and Documentation
-Markdown headings must be in English, and Markdown body content must be in Chinese.
+#### Rule 4: Language Specification
+Default: English
 
-- Markdown documentation (README, guides, specifications)
-- Code comments (inline, block, doc comments)
-- TODO comments, user-facing prompts, logs, and error messages
-- Configuration descriptions and API docs
+**Special Rules:**
+
+| Scenario | Rule |
+|----------|------|
+| AI communication with users | Chinese (replies, explanations, task descriptions, progress updates, error explanations, suggestions, plans) |
+| `_bmad-output/` documents | Headings in English, content in Chinese |
+| Git commit type | English (`feat`, `fix`, `docs`, etc.) |
+| Git commit scope/module | English (`backend:app-api`, etc.) |
+| Git commit subject | Chinese (`添加用户认证功能`) |
+| Git commit body | Chinese (`- 实现 JWT 令牌验证逻辑`) |
 
 #### Rule 5: File Size and Reading
 When file content is large, read and modify it in batches to avoid loading too much at once.
@@ -99,18 +105,17 @@ The entire development process must strictly follow BMAD-METHOD standards.
 ### Pre-Action Checklist
 
 1. Before responding, confirm the response is fully in Chinese
-2. Before creating files or folders, confirm the names are in English
-3. Before writing code, confirm all identifiers are in English
-4. Before writing Markdown headings, confirm they are in English
-5. Before writing Markdown body content, confirm it is in Chinese
-6. Before writing code comments or non-Markdown content, confirm they are in English
-7. Before writing tests, confirm no Mock is used
+2. Before writing `_bmad-output/` documents, confirm headings are in English and content in Chinese
+3. Before writing Git commits, confirm type/scope are in English and subject/body are in Chinese
+4. Before writing tests, confirm no Mock is used
 
 ### Conflict Resolution Priority
 
-1. Communication with users must be in Chinese
-2. Technical naming must be in English
-3. Markdown headings must be in English, Markdown body content must be in Chinese; code comments and non-Markdown content must be in English
+| Priority | Rule |
+|----------|------|
+| 1 (Highest) | Communication with users must be in Chinese |
+| 2 | Default language is English |
+| 3 | Follow special rules in Rule 4 |
 
 ### Auto-Correction Rules
 

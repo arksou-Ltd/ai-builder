@@ -44,17 +44,19 @@ This includes:
 
 ---
 
-### Rule 4: Content and Documentation
-**ALL content, comments, and documentation MUST be in Chinese**
+### Rule 4: Language Specification
+**Default: English**
 
-This includes:
-- Code comments (inline, block, docstrings)
-- Documentation files (README, guides, specs)
-- TODO comments
-- Error messages (user-facing)
-- Log messages (user-facing)
-- Configuration descriptions
-- API documentation
+**Special Rules:**
+
+| Scenario | Rule |
+|----------|------|
+| AI communication with users | Chinese (replies, explanations, task descriptions, progress updates, error explanations, suggestions, plans) |
+| `_bmad-output/` documents | Headings in English, content in Chinese |
+| Git commit type | English (`feat`, `fix`, `docs`, etc.) |
+| Git commit scope/module | English (`backend:app-api`, etc.) |
+| Git commit subject | Chinese (`添加用户认证功能`) |
+| Git commit body | Chinese (`- 实现 JWT 令牌验证逻辑`) |
 
 ---
 
