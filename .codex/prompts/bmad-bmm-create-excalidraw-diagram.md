@@ -1,5 +1,6 @@
 ---
 description: 'Create system architecture diagrams, ERDs, UML diagrams, or general technical diagrams in Excalidraw format'
+disable-model-invocation: true
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

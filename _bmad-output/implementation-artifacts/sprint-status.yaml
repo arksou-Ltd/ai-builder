@@ -1,0 +1,80 @@
+# generated: 2026-02-03
+# project: ai-builder
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: /Users/itian/Project/ai-builder/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-02-03
+project: ai-builder
+project_key: NOKEY
+tracking_system: file-system
+story_location: /Users/itian/Project/ai-builder/_bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Bootstrap (Monorepo Starter)
+  epic-1: in-progress
+  1-1-frontend-project-init: done
+  1-2-backend-workspace-init: in-progress
+  1-3-dependency-chain-setup: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Identity & Workspace Setup
+  epic-2: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Workflow Progress & UX Transparency
+  epic-3: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: GitHub Authorization & Repo Linking
+  epic-4: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: AI API Key Setup & Validation
+  epic-5: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Epic Definition & Management
+  epic-6: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Story Authoring + E2B Sandbox Sync
+  epic-7: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Story Execution
+  epic-8: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Code Delivery Automation
+  epic-9: backlog
+  epic-9-retrospective: optional

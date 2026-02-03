@@ -50,7 +50,7 @@ All code identifiers must be in English.
 - Variables, functions, methods, classes, interfaces, types, constants, enum values, modules, package names
 
 #### Rule 4: Content and Documentation
-Markdown headings must be in English, and Markdown body content must be in Chinese. All code comments and non-Markdown content must be in English.
+Markdown headings must be in English, and Markdown body content must be in Chinese.
 
 - Markdown documentation (README, guides, specifications)
 - Code comments (inline, block, doc comments)

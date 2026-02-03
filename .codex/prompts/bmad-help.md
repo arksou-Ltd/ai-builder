@@ -1,5 +1,6 @@
 ---
 description: 'Execute undefined'
+disable-model-invocation: true
 ---
 
 # undefined

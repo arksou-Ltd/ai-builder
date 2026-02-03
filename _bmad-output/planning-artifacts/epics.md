@@ -248,10 +248,13 @@ So that 我可以基于统一的技术栈与目录结构开始前端开发。
 **When** 执行前端初始化命令并完成 UI 基础配置
 **Then** `frontend/app-web/` 目录创建完成且可启动开发服务
 **And** Next.js App Router 结构就绪（启用 `src/` 目录）
-**And** Tailwind CSS 配置完成
-**And** shadcn/ui 初始化完成（启用 CSS variables，base color 使用 `slate`）
-**And** ESLint 配置完成且 `npm run lint` 通过
-**And** `package.json` 中依赖与脚本齐全（可 dev/build/lint）
+**And** `src/app/` 至少包含 `layout.tsx`、`page.tsx`、`globals.css`、`providers.tsx`
+**And** `src/` 至少包含 `components/`、`lib/`、`hooks/` 目录（与项目约定一致）
+**And** Tailwind CSS 4 配置完成，`postcss.config.mjs` 使用 `@tailwindcss/postcss`
+**And** shadcn/ui 初始化完成（`components.json` 配置 `cssVariables: true`，`baseColor: "slate"`，`css: "src/app/globals.css"`）
+**And** ESLint 配置完成，`eslint.config.mjs` 启用 `eslint-config-next` 的 `core-web-vitals` 与 `typescript`
+**And** `tsconfig.json` 启用 `baseUrl` 与 `@/*` 路径别名（指向 `src/*`）
+**And** `package.json` 中依赖与脚本齐全（`dev/build/start/lint` 可用且 `npm run lint` 通过）
 
 ### Story 1.2: 后端 Workspace 初始化（uv workspace + FastAPI）
 
@@ -266,7 +269,16 @@ So that 我可以基于统一的 Python workspace 与模块结构开始后端开
 **Then** `backend/` 目录创建完成
 **And** `backend/pyproject.toml` 作为 workspace root 配置完成
 **And** `backend/common-kernel/` 模块创建完成
+**And** `backend/common-kernel/src/kernel/common/` 目录存在，包含 `enums/` 与 `models/` 基础分组
 **And** `backend/app-api/` 模块创建完成，且代码根路径为 `backend/app-api/src/api/app/`
+**And** `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`router/`、`service/`、`schema/`
+**And** `backend/app-api/src/api/app/core/` 至少包含 `config.py`、`database.py`、`exceptions.py`
+**And** `backend/app-api/src/api/app/deps/` 至少包含 `auth.py`、`database.py`
+**And** `backend/app-api/src/api/app/router/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
+**And** `backend/app-api/src/api/app/service/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
+**And** `backend/app-api/src/api/app/schema/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
+**And** `backend/app-api/pyproject.toml` 定义 `app-api = "api.app.main:main"` 的启动入口
+**And** `backend/app-api` 使用 `src/api` 作为 wheel packages（命名空间包路径一致）
 **And** `backend/app-api` 可启动并提供 `GET /health` 返回成功
 **And** workspace members 正确声明为 `["common-kernel", "app-api"]`（不包含 `agent-kernel`）
 

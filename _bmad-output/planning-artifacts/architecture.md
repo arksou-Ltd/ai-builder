@@ -149,7 +149,6 @@ ai-builder/
 │   │   ├── README.md
 │   │   └── src/kernel/common/        # 源码目录 (包路径: kernel.common)
 │   │       ├── __init__.py
-│   │       ├── py.typed              # PEP 561 类型标记
 │   │       ├── enums/                # 公共枚举
 │   │       │   ├── __init__.py
 │   │       │   └── membership.py     # 示例: MembershipRole
@@ -225,7 +224,7 @@ ai-builder/
 #### 依赖链路
 
 ```
-app-api → common-kernel → arksou-kernel-framework[all] v0.3.2
+app-api → common-kernel → arksou-kernel-framework[all] v0.3.4
 ```
 
 #### arksou-kernel-framework 完整模块 (v0.3.1)
@@ -271,7 +270,6 @@ common-kernel/
 ├── README.md
 └── src/kernel/common/               # 包路径: kernel.common
     ├── __init__.py                  # 导出公共组件
-    ├── py.typed                     # PEP 561 类型标记
     ├── enums/                       # 公共枚举
     │   ├── __init__.py
     │   └── project.py               # ProjectStatus 等
@@ -295,7 +293,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.2" }
+arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.4" }
 
 [build-system]
 requires = ["hatchling"]
@@ -422,7 +420,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.2" }
+arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.4" }
 ```
 
 #### app-api/pyproject.toml
