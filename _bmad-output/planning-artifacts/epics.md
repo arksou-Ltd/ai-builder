@@ -2,6 +2,7 @@
 stepsCompleted:
   - 'step-01-validate-prerequisites'
   - 'step-02-design-epics'
+  - 'step-03-create-stories'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/architecture.md'
@@ -19,7 +20,7 @@ inputDocuments:
 
 ### Functional Requirements
 
-FR1: 用户可以通过 GitHub OAuth 登录系统。验收标准：点击登录按钮后跳转 GitHub 授权页面，授权成功后 5 秒内返回系统并显示用户头像和用户名
+FR1: 用户可以通过 Clerk 完成注册/登录（邮箱、Google、GitHub Account）。验收标准：点击登录按钮后进入 Clerk 授权流程，授权成功后 5 秒内返回系统并显示用户头像和用户名
 FR2: 用户可以查看自己的 GitHub 授权状态。验收标准：在设置页面显示当前授权状态（已授权/未授权）和授权范围（repo、user:email）
 FR3: 用户可以登出系统。验收标准：点击登出后立即清除本地会话，跳转至登录页面
 FR4: 用户可以创建新项目并命名。验收标准：输入项目名称（1-50字符）后点击创建，1 秒内显示新项目卡片
@@ -297,3 +298,59 @@ So that 我可以按架构约束进行模块化开发且避免循环依赖。
 **And** `app-api` 通过 workspace 引用依赖 `common-kernel`
 **And** `app-api` 依赖 `fastapi` 与 `uvicorn[standard]`
 **And** 仓库中不存在 `backend/agent-kernel`，且任何配置/依赖中都不引用它
+
+## Epic 2: Identity & Workspace Setup
+
+用户可通过 Clerk 完成注册/登录（邮箱、Google、GitHub Account）与登出，并可创建/删除工作空间（项目）。
+
+### Story 2.1: 用户注册/登录（Clerk 多方式）
+
+As a 访客用户,
+I want 通过 Clerk 进行邮箱/Google/GitHub Account 登录并进入系统,
+So that 我可以开始使用平台功能。
+
+**Acceptance Criteria:**
+
+**Given** 未登录用户在登录页
+**When** 选择 Clerk 登录方式（邮箱/Google/GitHub Account）并完成授权
+**Then** 5 秒内进入系统并显示用户头像和用户名
+**And** 登录被取消或失败时显示失败原因并保持在登录页
+
+### Story 2.2: 用户登出
+
+As a 已登录用户,
+I want 一键登出系统,
+So that 我的会话能被立即终止并返回登录页。
+
+**Acceptance Criteria:**
+
+**Given** 用户已登录
+**When** 点击登出
+**Then** 立即清除本地会话并跳转至登录页
+**And** 登出后不可访问受保护页面
+
+### Story 2.3: 创建工作空间（项目）
+
+As a 已登录用户,
+I want 创建新的工作空间并命名,
+So that 我可以开始在该项目中管理需求与仓库。
+
+**Acceptance Criteria:**
+
+**Given** 用户已登录并进入项目列表页
+**When** 输入项目名称（1-50字符）并点击创建
+**Then** 1 秒内显示新项目卡片
+**And** 项目名称重复或不合法时显示错误提示且不创建项目
+
+### Story 2.4: 删除工作空间（项目）
+
+As a 已登录用户,
+I want 删除不再需要的工作空间,
+So that 我的项目列表保持整洁。
+
+**Acceptance Criteria:**
+
+**Given** 用户在项目列表中选择某项目
+**When** 点击删除
+**Then** 弹出二次确认对话框（含项目名称）
+**And** 用户确认删除后 1 秒内从项目列表中移除，取消删除则项目保持不变

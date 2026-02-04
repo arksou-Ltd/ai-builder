@@ -17,10 +17,14 @@ classification:
 workflowType: 'prd'
 date: 2026-01-31
 author: Arksou
-lastEdited: '2026-01-31'
+lastEdited: '2026-02-04'
 editHistory:
   - date: '2026-01-31'
     changes: '为 56 个功能需求（FR1-FR56）补充验收标准，提升 SMART Measurable 评分'
+  - date: '2026-02-04'
+    changes: '补充 Epic 2（Identity & Workspace Setup）的 story 拆分与验收标准'
+  - date: '2026-02-04'
+    changes: '统一 Clerk 认证、补充 Story Given/When/Then、补齐 RBAC/订阅层级并移除实现细节'
 ---
 
 # Product Requirements Document - ai-builder
@@ -126,7 +130,8 @@ ai-builder 采用三层架构解决问题：
 
 | 功能 | 说明 |
 |------|------|
-| GitHub OAuth 登录 | 无独立账号系统 |
+| Clerk 登录（邮箱/Google/GitHub Account） | 无独立账号系统 |
+| GitHub OAuth 授权（仓库访问） | 用于仓库读写权限授权 |
 | 项目管理 | 创建项目并导入多个 GitHub 仓库（后端 + 多前端） |
 | AI 渠道配置 | 支持 Claude Code、Codex（用户配置中转服务 URL + API Key） |
 | 工作流引导 | 拉取代码 → 创建分支 → 史诗 → 故事 → 开发 → 验证 → PR |
@@ -142,6 +147,7 @@ ai-builder 采用三层架构解决问题：
 | 高级报表/数据分析 | 根据用户反馈优化 |
 | 更多项目类型支持 | 根据用户反馈优化 |
 | 更多 AI 渠道 | 根据用户反馈优化 |
+| AI 服务失败自动重试策略 | 增长期引入 |
 
 ### Vision (Future)
 
@@ -159,7 +165,7 @@ ai-builder 采用三层架构解决问题：
 小李是创业公司的产品经理，团队正在推行"人人都是 Builder"的 AI Native 文化。她刚用 Cursor 写了一个登录页面的 demo，兴冲冲给研发看，却被告知"这个架构不对，没法用"。她沮丧地想：明明功能都实现了，为什么就是不能用？
 
 **Rising Action（发展）：**
-1. 小李听说了 ai-builder，用 GitHub 账号一键登录
+1. 小李听说了 ai-builder，通过 Clerk 使用 GitHub 账号一键登录
 2. 创建一个新项目"电商平台"，导入三个 GitHub 仓库：
    - 后端 Spring 仓库（仓库A）
    - Flutter 移动端仓库（仓库B）
@@ -233,7 +239,7 @@ ai-builder 采用三层架构解决问题：
 
 | 旅程 | 揭示的能力需求 | 对应 FR |
 |------|---------------|---------|
-| PM 首次成功 | GitHub OAuth、项目管理（含多仓库导入）、AI 渠道配置、工作流引导、跨仓库需求实现、多 PR 提交 | FR1-FR19, FR24-FR38, FR42-FR56 |
+| PM 首次成功 | Clerk 登录 + GitHub OAuth 授权、项目管理（含多仓库导入）、AI 渠道配置、工作流引导、跨仓库需求实现、多 PR 提交 | FR1-FR19, FR24-FR38, FR42-FR56 |
 | PM 失败恢复 | 错误提示、对话式调试、按仓库部分提交、故事状态管理 | FR49-FR51, FR36-FR37, FR53-FR54 |
 | 研发项目准备 | 仓库架构文档读取、项目规范自动识别与学习、规范摘要展示 | FR20-FR23 |
 | 研发日常 Review | PR 变更摘要、Epic/Story 上下文关联、多仓库 PR 交叉引用 | FR39-FR41 |
@@ -337,9 +343,24 @@ ai-builder 是 SaaS B2B 开发者工具平台，结合云端服务与 AI 代码�
 
 | 维度 | MVP 方案 |
 |------|----------|
-| **认证** | GitHub OAuth（无独立账号） |
+| **认证** | Clerk 登录（邮箱/Google/GitHub Account） |
 | **用户隔离** | 每用户独立项目，无共享 |
 | **权限** | 用户只能访问自己的项目和已授权仓库 |
+
+### 权限与订阅模型
+
+#### RBAC 矩阵（MVP 简版）
+
+| 角色 | 权限范围 |
+|------|----------|
+| **Owner** | 创建/删除项目、导入仓库、配置 AI 渠道、提交 PR |
+| **Member** | 查看项目、参与需求流程、提交 PR（MVP 预留） |
+
+#### 订阅层级（MVP）
+
+| 层级 | 说明 |
+|------|------|
+| **Free（MVP）** | 单一免费层级；不区分功能/配额；后续增长期再定义层级 |
 
 ### 项目模型
 
@@ -455,7 +476,8 @@ ai-builder 是 SaaS B2B 开发者工具平台，结合云端服务与 AI 代码�
 
 | 集成 | 用途 | 优先级 |
 |------|------|--------|
-| **GitHub API** | OAuth 登录、仓库读写、分支管理、PR 创建 | P0 |
+| **Clerk** | 用户注册/登录与会话管理 | P0 |
+| **GitHub API** | OAuth 授权（仓库读写）、分支管理、PR 创建 | P0 |
 | **Codex** | 需求交流、Story 生成、Code Review | P0 |
 | **Claude Code** | Story 代码开发、问题修复 | P0 |
 
@@ -513,11 +535,55 @@ ai-builder 是 SaaS B2B 开发者工具平台，结合云端服务与 AI 代码�
 
 | 能力 | 说明 |
 |------|------|
-| GitHub OAuth 登录 | 无独立账号系统 |
+| Clerk 登录（邮箱/Google/GitHub Account） | 无独立账号系统 |
+| GitHub OAuth 授权（仓库访问） | 用于仓库读写权限授权 |
 | 项目管理 | 创建项目 + 多仓库导入 |
 | AI 渠道配置 | Codex + Claude Code（用户配置中转服务） |
 | 工作流引导 | Epic → Story → 开发 → Review → PR |
 | 项目类型支持 | Flutter、Spring、Next.js |
+
+### Epic 2: Identity & Workspace Setup
+
+用户可通过 Clerk 完成注册/登录（邮箱、Google、GitHub Account）与登出，并可创建/删除工作空间（项目）。
+
+**Story 拆分（覆盖 FR1/FR3/FR4/FR8）：**
+
+1. **Story 2.1：用户注册/登录（Clerk 多方式）**
+   - 覆盖 FR：FR1
+   - 验收标准：
+     - Given 未登录用户在登录页
+     - When 选择 Clerk 登录方式（邮箱/Google/GitHub Account）并完成授权
+     - Then 5 秒内进入系统并显示用户头像和用户名
+     - Given 登录被取消或失败
+     - When 返回系统
+     - Then 显示失败原因并保持在登录页
+2. **Story 2.2：用户登出**
+   - 覆盖 FR：FR3
+   - 验收标准：
+     - Given 用户已登录
+     - When 点击登出
+     - Then 立即清除本地会话并跳转至登录页
+3. **Story 2.3：创建工作空间（项目）**
+   - 覆盖 FR：FR4
+   - 验收标准：
+     - Given 用户已登录并进入项目列表页
+     - When 输入项目名称（1-50字符）并点击创建
+     - Then 1 秒内显示新项目卡片
+     - Given 项目名称重复或不合法
+     - When 提交创建
+     - Then 显示错误提示且不创建项目
+4. **Story 2.4：删除工作空间（项目）**
+   - 覆盖 FR：FR8
+   - 验收标准：
+     - Given 用户在项目列表中选择某项目
+     - When 点击删除
+     - Then 弹出二次确认对话框（含项目名称）
+     - Given 用户确认删除
+     - When 提交确认
+     - Then 1 秒内从项目列表中移除
+     - Given 用户取消删除
+     - When 关闭确认对话框
+     - Then 项目保持不变
 
 ### Post-MVP Features
 
@@ -566,7 +632,7 @@ ai-builder 是 SaaS B2B 开发者工具平台，结合云端服务与 AI 代码�
 
 ### 用户认证与管理
 
-- **FR1:** 用户可以通过 GitHub OAuth 登录系统。验收标准：点击登录按钮后跳转 GitHub 授权页面，授权成功后 5 秒内返回系统并显示用户头像和用户名
+- **FR1:** 用户可以通过 Clerk 完成注册/登录（邮箱、Google、GitHub Account）。验收标准：点击登录按钮后进入 Clerk 授权流程，授权成功后 5 秒内返回系统并显示用户头像和用户名
 - **FR2:** 用户可以查看自己的 GitHub 授权状态。验收标准：在设置页面显示当前授权状态（已授权/未授权）和授权范围（repo、user:email）
 - **FR3:** 用户可以登出系统。验收标准：点击登出后立即清除本地会话，跳转至登录页面
 
@@ -584,7 +650,7 @@ ai-builder 是 SaaS B2B 开发者工具平台，结合云端服务与 AI 代码�
 - **FR10:** 用户可以配置 Codex 的 API URL 和 API Key。验收标准：表单校验 URL 格式和 Key 非空，保存成功后显示"配置已保存"提示
 - **FR11:** 用户可以配置 Claude Code 的 API URL 和 API Key。验收标准：表单校验 URL 格式和 Key 非空，保存成功后显示"配置已保存"提示
 - **FR12:** 用户可以测试 AI 渠道配置是否有效。验收标准：点击测试按钮后 10 秒内返回测试结果（成功/失败+具体错误原因）
-- **FR13:** 系统可以加密存储用户的 AI API Key。验收标准：数据库中 API Key 字段使用 AES-256 加密存储，无法逆向获取明文
+- **FR13:** 系统可以安全存储用户的 AI API Key。验收标准：数据库中 API Key 字段采用行业标准强度加密存储，无法逆向获取明文
 
 ### 史诗管理
 
@@ -659,17 +725,16 @@ ai-builder 是 SaaS B2B 开发者工具平台，结合云端服务与 AI 代码�
 
 | NFR | 要求 | 量化指标 | 验证方法 |
 |-----|------|----------|----------|
-| **NFR-S1** | GitHub Token 加密存储 | AES-256 或同等强度加密 | 数据库检查：Token 字段不可逆向明文 |
-| **NFR-S2** | AI API Key 加密存储 | AES-256 或同等强度加密 | 数据库检查：API Key 字段不可逆向明文 |
+| **NFR-S1** | GitHub Token 加密存储 | 行业标准强度加密（不可逆） | 数据库检查：Token 字段不可逆向明文 |
+| **NFR-S2** | AI API Key 加密存储 | 行业标准强度加密（不可逆） | 数据库检查：API Key 字段不可逆向明文 |
 | **NFR-S3** | 用户数据隔离 | 100% 请求仅返回当前用户数据 | 自动化测试：跨用户数据访问测试全部失败 |
-| **NFR-S4** | GitHub OAuth 最小权限 | 仅申请 repo、user:email 权限 | OAuth 配置审查 |
+| **NFR-S4** | GitHub OAuth 授权最小权限 | 仅申请 repo、user:email 权限 | OAuth 配置审查 |
 
 ### Integration（集成）
 
 | NFR | 要求 | 量化指标 | 验证方法 |
 |-----|------|----------|----------|
 | **NFR-I1** | GitHub API 失败优雅处理 | 100% 失败场景有明确错误提示 | 模拟 API 失败，验证错误提示显示 |
-| **NFR-I2** | AI 服务失败处理 | 自动重试，超时后可手动重试 | 模拟 AI 超时，验证重试机制和手动触发 |
 | **NFR-I3** | AI 配置校验 | 首次使用前 100% 触发配置检查 | 配置错误时验证阻止操作并提示 |
 
 ### Reliability（可靠性）

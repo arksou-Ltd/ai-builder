@@ -7,6 +7,10 @@ inputDocuments:
 workflowStatus: 'completed'
 completedDate: 2026-02-01
 date: 2026-02-01
+lastEdited: 2026-02-05
+editHistory:
+  - date: '2026-02-05'
+    changes: '统一认证描述为 Clerk 双层模式、补充登出流程交互设计、补充删除项目交互设计'
 author: Arksou
 ---
 
@@ -1233,9 +1237,83 @@ ai-builder 定位为 Developer Tool + Productivity Tool + Micro SaaS 的综合�
 - 可并行存在多个"PR 待 Review"状态的 Story
 - PR 被打回后，Story 回到"需修改"状态，用户可修改文档或代码
 
-### Journey 1: 首次使用
+### Journey 1: 首次使用与身份认证
 
-**流程：** 访问 → GitHub OAuth → 创建会话 → 添加项目 → 配置 AI → 开始工作
+**认证架构（双层模式）：**
+
+| 层级 | 服务 | 用途 | 触发时机 |
+|------|------|------|----------|
+| **身份认证** | Clerk | 用户登录/登出（邮箱、Google、GitHub Account） | 访问系统时 |
+| **仓库授权** | GitHub OAuth | 仓库读写权限（repo、user:email） | 接入新仓库时 |
+
+**登录流程：** 访问 → Clerk 登录（邮箱/Google/GitHub Account） → 创建会话 → 添加项目 → 配置 AI → 开始工作
+
+**登录交互详情：**
+
+| 步骤 | 用户行为 | 系统反馈 | 异常处理 |
+|------|----------|----------|----------|
+| 1. 访问登录页 | 打开应用 | 显示 Clerk 登录组件 | - |
+| 2. 选择登录方式 | 点击邮箱/Google/GitHub | 跳转对应授权流程 | - |
+| 3. 完成授权 | 在第三方页面授权 | 5秒内返回系统 | 失败时显示错误原因 |
+| 4. 进入系统 | - | 显示用户头像和用户名 | - |
+
+**登录失败场景：**
+
+| 场景 | 错误提示 | 恢复路径 |
+|------|----------|----------|
+| 授权被取消 | "登录已取消" | 显示"重新登录"按钮 |
+| 授权失败 | "登录失败：[具体原因]" | 显示"重试"按钮 |
+| 网络超时 | "网络连接超时" | 显示"重试"按钮 |
+
+**登出流程：**
+
+| 步骤 | 用户行为 | 系统反馈 |
+|------|----------|----------|
+| 1. 点击用户头像 | 打开用户菜单 | 显示下拉菜单（含"登出"选项） |
+| 2. 点击"登出" | 确认登出 | 立即清除本地会话 |
+| 3. 跳转 | - | 自动跳转至登录页 |
+
+**登出交互规范：**
+- 登出操作无需二次确认（非破坏性操作）
+- 登出后立即清除所有本地会话数据
+- 登出后尝试访问受保护页面自动跳转登录页
+
+**删除项目流程：**
+
+| 步骤 | 用户行为 | 系统反馈 |
+|------|----------|----------|
+| 1. 进入项目设置 | 点击项目卡片的设置图标 | 打开项目设置页/面板 |
+| 2. 点击删除 | 点击"删除项目"按钮 | 弹出 AlertDialog 二次确认 |
+| 3. 确认删除 | 点击"确认删除" | 1秒内从项目列表移除 |
+| 3b. 取消删除 | 点击"取消" | 关闭对话框，项目保持不变 |
+
+**删除项目 AlertDialog 规范：**
+
+```tsx
+<AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button variant="destructive">删除项目</Button>
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>确认删除「{projectName}」？</AlertDialogTitle>
+      <AlertDialogDescription>
+        此操作不可恢复。项目下的所有 Epic 和 Story 将被永久删除。
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>取消</AlertDialogCancel>
+      <AlertDialogAction className="bg-red-600">确认删除</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+**删除项目交互要点：**
+- 对话框标题必须包含项目名称（避免误删）
+- 使用 `variant="destructive"` 的红色按钮
+- 取消按钮在左侧，确认删除按钮在右侧
+- 删除成功后显示 Toast 提示"项目已删除"
 
 ### Journey 2: 需求定义
 
