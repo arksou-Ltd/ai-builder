@@ -11,27 +11,27 @@ so that 我可以基于统一的 Python workspace 与模块结构开始后端开
 ## Acceptance Criteria
 
 1. 验收清单（逐项自检）
-   - [ ] 仓库当前没有后端工程（Given）
-   - [ ] 已初始化 uv workspace 并创建最小 FastAPI 服务骨架（When）
-   - [ ] `backend/` 目录创建完成（Then）
-   - [ ] `backend/pyproject.toml` 作为 workspace root 配置完成
-   - [ ] `backend/.python-version` 内容必须为 `3.12`（不是 `3.12.0` 或 `3.12.x`）
-   - [ ] `backend/common-kernel/` 模块创建完成
-   - [ ] `backend/common-kernel/src/kernel/common/` 目录存在，包含 `enums/` 与 `models/` 基础分组
-   - [ ] `backend/app-api/` 模块创建完成，且代码根路径为 `backend/app-api/src/api/app/`
-   - [ ] `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`routers/`、`services/`、`schemas/`
-   - [ ] `backend/app-api/src/api/app/core/` 至少包含 `config.py`、`database.py`、`exceptions.py`
-   - [ ] `backend/app-api/src/api/app/deps/` 至少包含 `auth.py`、`database.py`
-   - [ ] `backend/app-api/src/api/app/routers/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
-   - [ ] `backend/app-api/src/api/app/services/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
-   - [ ] `backend/app-api/src/api/app/schemas/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
-   - [ ] `backend/app-api/pyproject.toml` 定义 `app-api = "api.app.main:main"` 的启动入口
-   - [ ] `backend/app-api` 使用 `src/api` 作为 wheel packages（命名空间包路径一致）
-   - [ ] `backend/app-api` 可启动并提供 `GET /api/health` 返回成功
-   - [ ] `backend/app-api` 可启动并提供 `GET /api/v1/auth/me` 返回成功，且与 `/api/health` 一致使用 `Result[T]` 统一响应契约
-   - [ ] workspace members 正确声明为 `["common-kernel", "app-api"]`（不包含 `agent-kernel`）
-   - [ ] `app-api` 依赖包含数据库接入基线：`sqlalchemy[asyncio]>=2.0.46`、`asyncpg>=0.30.0`、`alembic>=1.17.0`
-   - [ ] `app-api` 的 Schema（示例：`AccountResponse`）必须继承框架 `BaseSchema`（禁止直接使用 `pydantic.BaseModel` 作为 DTO 基类）
+   - [x] 仓库当前没有后端工程（Given）
+   - [x] 已初始化 uv workspace 并创建最小 FastAPI 服务骨架（When）
+   - [x] `backend/` 目录创建完成（Then）
+   - [x] `backend/pyproject.toml` 作为 workspace root 配置完成
+   - [x] `backend/.python-version` 内容必须为 `3.12`（不是 `3.12.0` 或 `3.12.x`）
+   - [x] `backend/common-kernel/` 模块创建完成
+   - [x] `backend/common-kernel/src/kernel/common/` 目录存在，包含 `enums/` 与 `models/` 基础分组
+   - [x] `backend/app-api/` 模块创建完成，且代码根路径为 `backend/app-api/src/api/app/`
+   - [x] `backend/app-api/src/api/app/` 至少包含 `main.py`、`core/`、`deps/`、`routers/`、`services/`、`schemas/`
+   - [x] `backend/app-api/src/api/app/core/` 至少包含 `config.py`、`database.py`、`exceptions.py`
+   - [x] `backend/app-api/src/api/app/deps/` 至少包含 `auth.py`、`database.py`
+   - [x] `backend/app-api/src/api/app/routers/` 以模块分组（如 `auth/`），且至少包含 `auth/me.py` 示例
+   - [x] `backend/app-api/src/api/app/services/` 以模块分组（如 `auth/`），包含 `*_service.py` 命名示例
+   - [x] `backend/app-api/src/api/app/schemas/` 以模块分组（如 `auth/`），包含请求/响应 DTO 示例
+   - [x] `backend/app-api/pyproject.toml` 定义 `app-api = "api.app.main:main"` 的启动入口
+   - [x] `backend/app-api` 使用 `src/api` 作为 wheel packages（命名空间包路径一致）
+   - [x] `backend/app-api` 可启动并提供 `GET /api/health` 返回成功
+   - [x] `backend/app-api` 可启动并提供 `GET /api/v1/auth/me` 返回成功，且与 `/api/health` 一致使用 `Result[T]` 统一响应契约
+   - [x] workspace members 正确声明为 `["common-kernel", "app-api"]`（不包含 `agent-kernel`）
+   - [x] `app-api` 依赖包含数据库接入基线：`sqlalchemy[asyncio]>=2.0.46`、`asyncpg>=0.30.0`、`alembic>=1.17.0`
+   - [x] `app-api` 的 Schema（示例：`AccountResponse`）必须继承框架 `BaseSchema`（禁止直接使用 `pydantic.BaseModel` 作为 DTO 基类）
 
 ## Tasks / Subtasks
 
@@ -154,7 +154,7 @@ python -c "from api.app.main import app; print(app)"
 - Python 版本必须 ≥ 3.12，使用 `.python-version` 文件锁定（内容为 `3.12`）。
 - FastAPI 必须 ≥ 0.115.0，异步优先，数据库操作使用 `async/await`。
 - SQLAlchemy 2.0 异步 ORM，PostgreSQL 16+ 为目标数据库（本 Story 建立结构与依赖）。
-- 统一响应与异常体系使用 `arksou-kernel-framework v0.3.4` 提供能力，不得重复实现。
+- 统一响应与异常体系使用 `arksou-kernel-framework v0.3.5` 提供能力，不得重复实现。
 - 代码风格：所有函数参数与返回值必须有类型注解；使用 f-string；路径操作使用 `pathlib.Path`。
 
 ## Dev Agent Guardrails: Architecture Compliance
@@ -172,7 +172,7 @@ python -c "from api.app.main import app; print(app)"
 
 **依赖链：**
 ```
-app-api → common-kernel → arksou-kernel-framework[all] v0.3.4
+app-api → common-kernel → arksou-kernel-framework[all] v0.3.5
 ```
 
 **common-kernel pyproject.toml 关键配置：**
@@ -186,7 +186,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.4" }
+arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.5" }
 
 [build-system]
 requires = ["hatchling"]

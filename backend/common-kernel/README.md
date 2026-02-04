@@ -18,4 +18,4 @@ from kernel.common.models import Account
 
 ## 依赖
 
-- `arksou-kernel-framework[all]` v0.3.4
+- `arksou-kernel-framework[all]` v0.3.5

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -122,8 +122,8 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "arksou-kernel-framework"
-version = "0.3.4"
-source = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.4#538762c5d551e9fdaaf589558c0842db8b6d7ec8" }
+version = "0.3.5"
+source = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.5#be7af764fb804da95b41af8a42520a0cc7007aa0" }
 dependencies = [
     { name = "fastapi" },
     { name = "opentelemetry-api" },
@@ -441,7 +441,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "arksou-kernel-framework", extras = ["all"], git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.4" }]
+requires-dist = [{ name = "arksou-kernel-framework", extras = ["all"], git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.5" }]
 
 [[package]]
 name = "coverage"
