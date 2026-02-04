@@ -5,6 +5,11 @@ description = "AI Builder 后端工作区根配置"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+    "debugpy>=1.8.0",
+]
+
 [tool.uv.workspace]
 members = [
     "common-kernel",

@@ -24,6 +24,7 @@ dev = [
     "testcontainers[postgres]>=4.10.0",
     "coverage>=7.6.0",
     "packaging>=24.0",
+    "debugpy>=1.8.0",
 ]
 
 [tool.uv.sources]
