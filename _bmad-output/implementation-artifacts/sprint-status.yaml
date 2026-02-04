@@ -2,7 +2,7 @@
 # project: ai-builder
 # project_key: NOKEY
 # tracking_system: file-system
-# story_location: /Users/itian/Project/ai-builder/_bmad-output/implementation-artifacts
+# story_location: _bmad-output/implementation-artifacts
 
 # STATUS DEFINITIONS:
 # ==================
@@ -37,14 +37,14 @@ generated: 2026-02-03
 project: ai-builder
 project_key: NOKEY
 tracking_system: file-system
-story_location: /Users/itian/Project/ai-builder/_bmad-output/implementation-artifacts
+story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Project Bootstrap (Monorepo Starter)
   epic-1: in-progress
   1-1-frontend-project-init: done
   1-2-backend-workspace-init: done
-  1-3-dependency-chain-setup: backlog
+  1-3-dependency-chain-setup: done
   epic-1-retrospective: optional
 
   # Epic 2: Identity & Workspace Setup

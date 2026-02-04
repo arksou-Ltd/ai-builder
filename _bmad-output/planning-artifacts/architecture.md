@@ -225,7 +225,7 @@ ai-builder/
 app-api → common-kernel → arksou-kernel-framework[all] v0.3.4
 ```
 
-#### arksou-kernel-framework 完整模块 (v0.3.1)
+#### arksou-kernel-framework 完整模块 (v0.3.4)
 
 框架提供 9 个独立模块，覆盖企业级 FastAPI 应用的所有基础设施需求：
 
