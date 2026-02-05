@@ -154,7 +154,7 @@ python -c "from api.app.main import app; print(app)"
 - Python 版本必须 ≥ 3.12，使用 `.python-version` 文件锁定（内容为 `3.12`）。
 - FastAPI 必须 ≥ 0.115.0，异步优先，数据库操作使用 `async/await`。
 - SQLAlchemy 2.0 异步 ORM，PostgreSQL 16+ 为目标数据库（本 Story 建立结构与依赖）。
-- 统一响应与异常体系使用 `arksou-kernel-framework v0.3.5` 提供能力，不得重复实现。
+- 统一响应与异常体系使用 `arksou-kernel-framework v0.3.6` 提供能力，不得重复实现。
 - 代码风格：所有函数参数与返回值必须有类型注解；使用 f-string；路径操作使用 `pathlib.Path`。
 
 ## Dev Agent Guardrails: Architecture Compliance
@@ -172,7 +172,7 @@ python -c "from api.app.main import app; print(app)"
 
 **依赖链：**
 ```
-app-api → common-kernel → arksou-kernel-framework[all] v0.3.5
+app-api → common-kernel → arksou-kernel-framework[all] v0.3.6
 ```
 
 **common-kernel pyproject.toml 关键配置：**
@@ -186,7 +186,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.5" }
+arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.6" }
 
 [build-system]
 requires = ["hatchling"]

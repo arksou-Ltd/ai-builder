@@ -29,7 +29,7 @@ class TestDependencyChainVersion:
     """Dependency version verification tests."""
 
     def test_arksou_kernel_framework_version(self) -> None:
-        """arksou-kernel-framework version must be exactly 0.3.5."""
+        """arksou-kernel-framework version must be exactly 0.3.5 (tag v0.3.6)."""
         version = importlib.metadata.version("arksou-kernel-framework")
         assert version == "0.3.5", (
             f"arksou-kernel-framework version mismatch: expected 0.3.5, got {version}"
@@ -95,7 +95,7 @@ class TestDependencySourceConfiguration:
 
     These tests verify the CRITICAL configuration constraints using
     structured TOML parsing (not string matching):
-    - arksou-kernel-framework must come from Git SSH source with tag v0.3.5
+    - arksou-kernel-framework must come from Git SSH source with tag v0.3.6
     - common-kernel must use workspace source
     """
 
@@ -127,8 +127,8 @@ class TestDependencySourceConfiguration:
         assert "ssh://git@github-arksou" in framework_source["git"], (
             "arksou-kernel-framework must use Git SSH source (ssh://git@github-arksou)"
         )
-        assert framework_source.get("tag") == "v0.3.5", (
-            f"arksou-kernel-framework must be pinned to tag v0.3.5, "
+        assert framework_source.get("tag") == "v0.3.6", (
+            f"arksou-kernel-framework must be pinned to tag v0.3.6, "
             f"got: {framework_source.get('tag')}"
         )
 
@@ -150,7 +150,7 @@ class TestDependencySourceConfiguration:
         )
 
     def test_uv_lock_contains_git_source_with_tag(self) -> None:
-        """uv.lock must contain Git source with tag v0.3.4 for arksou-kernel-framework."""
+        """uv.lock must contain Git source with tag v0.3.6 for arksou-kernel-framework."""
         backend_root = get_backend_root()
         uv_lock_path = backend_root / "uv.lock"
 
@@ -169,10 +169,10 @@ class TestDependencySourceConfiguration:
             "arksou-kernel-framework must come from Git SSH source in uv.lock"
         )
 
-        # Verify tag v0.3.5 is locked in the git URL
-        # uv.lock format: ...?tag=v0.3.5#<commit_sha>
-        assert "tag=v0.3.5" in content, (
-            "arksou-kernel-framework must be pinned to tag v0.3.5 in uv.lock"
+        # Verify tag v0.3.6 is locked in the git URL
+        # uv.lock format: ...?tag=v0.3.6#<commit_sha>
+        assert "tag=v0.3.6" in content, (
+            "arksou-kernel-framework must be pinned to tag v0.3.6 in uv.lock"
         )
 
     def test_workspace_members_exact_configuration(self) -> None:

@@ -32,10 +32,10 @@ _此文件包含 AI 代理在此项目中实现代码时必须遵循的关键规
 - SQLAlchemy 2.0 (异步 ORM)
 - PostgreSQL 16+ (数据库)
 - Pydantic ≥2.10.0 (数据验证)
-- arksou-kernel-framework v0.3.5 (基础框架)
+- arksou-kernel-framework v0.3.6 (基础框架)
 
 ### Critical Version Constraints
-- arksou-kernel-framework 必须从 Git SSH 源安装 (v0.3.5)
+- arksou-kernel-framework 必须从 Git SSH 源安装 (v0.3.6)
 - Python 必须 ≥3.12（使用 `.python-version` 锁定）
 - 前后端完全分离，独立部署
 
@@ -67,7 +67,7 @@ _此文件包含 AI 代理在此项目中实现代码时必须遵循的关键规
 
 #### FastAPI (后端)
 
-**arksou-kernel-framework v0.3.5 已提供能力（禁止重复实现）：**
+**arksou-kernel-framework v0.3.6 已提供能力（禁止重复实现）：**
 - ✅ 统一响应格式 `Result[T]` + 7 位错误码 `Code`
 - ✅ 异常体系 `BusinessException` (4xx) / `SystemException` (5xx)
 - ✅ 雪花 ID 生成器 `IdGenerator`

@@ -14,8 +14,8 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
 
 1. Given 后端 workspace 初始化完成  
    When 配置模块依赖关系  
-   Then 依赖链满足：`app-api → common-kernel → arksou-kernel-framework[all] v0.3.5`  
-   And `common-kernel` 通过 Git SSH 源引入 `arksou-kernel-framework[all]@v0.3.5`（`[tool.uv.sources]` + `tag = "v0.3.5"`）  
+   Then 依赖链满足：`app-api → common-kernel → arksou-kernel-framework[all] v0.3.6`  
+   And `common-kernel` 通过 Git SSH 源引入 `arksou-kernel-framework[all]@v0.3.6`（`[tool.uv.sources]` + `tag = "v0.3.6"`）  
    And `app-api` 通过 workspace 引用依赖 `common-kernel`（`common-kernel = { workspace = true }`）  
    And `app-api` 依赖至少包含 `fastapi` 与 `uvicorn[standard]`（版本下限对齐架构基线）  
    And 仓库中不存在 `backend/agent-kernel`，且任何配置/依赖中都不引用它
@@ -26,7 +26,7 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
   - [x] 校验 `backend/.python-version` 内容严格为 `3.12`（不是 `3.12.0` 或 `3.12.x`）
   - [x] 校验 `backend/common-kernel/pyproject.toml`：
     - [x] `dependencies` 包含 `arksou-kernel-framework[all]`
-    - [x] `[tool.uv.sources].arksou-kernel-framework` 使用 Git SSH 源且 `tag = "v0.3.5"`
+    - [x] `[tool.uv.sources].arksou-kernel-framework` 使用 Git SSH 源且 `tag = "v0.3.6"`
   - [x] 校验 `backend/app-api/pyproject.toml`：
     - [x] `dependencies` 包含 `common-kernel`、`fastapi>=0.115.0`、`uvicorn[standard]>=0.34.0`
     - [x] 校验数据库依赖存在且版本下限满足：
@@ -53,9 +53,9 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
 ## Dev Notes
 
 - 本 Story 的核心是“依赖链与边界”而不是新增业务代码；尽量只修改依赖与 workspace 配置，避免无关重构。
-- 依赖链路（必须满足）：`app-api → common-kernel → arksou-kernel-framework[all] v0.3.5`。
+- 依赖链路（必须满足）：`app-api → common-kernel → arksou-kernel-framework[all] v0.3.6`。
 - Git SSH 依赖注意事项（**本仓库最容易踩坑点**）：
-  - `arksou-kernel-framework` 必须通过 Git SSH 源拉取：`ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git`（并固定 `tag = "v0.3.5"`）。
+  - `arksou-kernel-framework` 必须通过 Git SSH 源拉取：`ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git`（并固定 `tag = "v0.3.6"`）。
   - 这里的 `github-arksou` 不是 GitHub 官方域名，而是 **SSH Host 别名**：uv/git 会读取 `~/.ssh/config`，通过该别名选择端口与密钥（否则会用错 key 或连不上）。
   - **本机现状校验结果（2026-02-04）：** 已存在 `Host github-arksou`，并配置为 `Hostname ssh.github.com` + `Port 443` + `User git` + `IdentityFile ~/.ssh/id_rsa_arksou`，因此上述 Git URL 在本机可直接使用。
   - 如在其他机器/CI 上失败，优先补齐下面这段最小配置（保持与本机一致）：
@@ -92,7 +92,7 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
 | 检查项 | 要求 |
 | --- | --- |
 | Python 版本锁定 | `backend/.python-version` 内容严格为 `3.12`；各模块 `requires-python >=3.12` |
-| 框架来源与版本 | `arksou-kernel-framework` 必须走 Git SSH 源且 `tag = "v0.3.5"`（禁止替换为 PyPI 或其他 tag） |
+| 框架来源与版本 | `arksou-kernel-framework` 必须走 Git SSH 源且 `tag = "v0.3.6"`（禁止替换为 PyPI 或其他 tag） |
 | app-api 基础依赖 | `fastapi>=0.115.0`、`uvicorn[standard]>=0.34.0` |
 | app-api 数据库依赖 | `sqlalchemy[asyncio]>=2.0.46`、`asyncpg>=0.30.0`、`alembic>=1.17.0` |
 | app-api JWT 依赖 | `pyjwt[crypto]>=2.10.0` |
@@ -108,7 +108,7 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
 
 | 依赖/约束 | 要求 |
 | --- | --- |
-| `arksou-kernel-framework[all]` | Git SSH 源 + `tag = "v0.3.5"` |
+| `arksou-kernel-framework[all]` | Git SSH 源 + `tag = "v0.3.6"` |
 | `fastapi` / `uvicorn` | `fastapi>=0.115.0`、`uvicorn[standard]>=0.34.0` |
 | 依赖声明位置 | `common-kernel` → `backend/common-kernel/pyproject.toml`；`app-api` → `backend/app-api/pyproject.toml`；workspace → `backend/pyproject.toml` |
 
@@ -158,7 +158,7 @@ Claude Opus 4.5 (Claude Code CLI)
 - 2026-02-04: 根据质量评审补齐依赖校验项（DB/JWT/.python-version）与安装/导入验证步骤，并将 guardrails 表格化以提升扫描效率
 - 2026-02-04: 执行依赖链校验 - 所有配置项已满足 AC 要求
   - `.python-version` = `3.12` ✓
-  - `common-kernel` 通过 Git SSH 源依赖 `arksou-kernel-framework[all]@v0.3.5` ✓
+  - `common-kernel` 通过 Git SSH 源依赖 `arksou-kernel-framework[all]@v0.3.6` ✓
   - `app-api` 通过 workspace 依赖 `common-kernel` ✓
   - 所有依赖版本下限满足：fastapi>=0.115.0, uvicorn>=0.34.0, sqlalchemy>=2.0.46, asyncpg>=0.30.0, alembic>=1.17.0, pyjwt>=2.10.0 ✓
   - workspace members 仅包含 `common-kernel` 与 `app-api` ✓
@@ -188,7 +188,7 @@ Claude Opus 4.5 (Claude Code CLI)
 - 2026-02-04: Code Review Round 3 修复:
   - [Medium] 新增 `packaging>=24.0` 到 app-api dev 依赖
   - [Medium] 重写 TestDependencySourceConfiguration 使用 tomllib 结构化 TOML 解析（替代字符串匹配）
-  - [Medium] 修复 architecture.md 版本不一致（v0.3.1 → v0.3.5）
+  - [Medium] 修复 architecture.md 版本不一致（v0.3.1 → v0.3.6）
   - [Medium] 新增 workspace members 精确匹配测试（set 比较）
   - [Medium] 修复 uv.lock Git 源断言格式（`git = "ssh://..."`）
   - [Low] 所有 read_text() 调用添加 `encoding="utf-8"` 参数
