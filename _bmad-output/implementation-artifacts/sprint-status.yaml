@@ -1,4 +1,4 @@
-# generated: 2026-02-04
+# generated: 2026-02-05
 # project: ai-builder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-04
+generated: 2026-02-05
 project: ai-builder
 project_key: NOKEY
 tracking_system: file-system
@@ -48,33 +48,9 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Identity & Workspace Setup
-  epic-2: backlog
+  epic-2: in-progress
+  2-1-clerk-sign-in: review
+  2-2-sign-out: backlog
+  2-3-workspace-create: backlog
+  2-4-workspace-delete: backlog
   epic-2-retrospective: optional
-
-  # Epic 3: Workflow Progress & UX Transparency
-  epic-3: backlog
-  epic-3-retrospective: optional
-
-  # Epic 4: GitHub Authorization & Repo Linking
-  epic-4: backlog
-  epic-4-retrospective: optional
-
-  # Epic 5: AI API Key Setup & Validation
-  epic-5: backlog
-  epic-5-retrospective: optional
-
-  # Epic 6: Epic Definition & Management
-  epic-6: backlog
-  epic-6-retrospective: optional
-
-  # Epic 7: Story Authoring + E2B Sandbox Sync
-  epic-7: backlog
-  epic-7-retrospective: optional
-
-  # Epic 8: Story Execution
-  epic-8: backlog
-  epic-8-retrospective: optional
-
-  # Epic 9: Code Delivery Automation
-  epic-9: backlog
-  epic-9-retrospective: optional

@@ -33,7 +33,7 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{ cssLayerName: "clerk" }}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </ClerkProvider>
   );

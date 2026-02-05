@@ -1,12 +1,21 @@
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <main className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight">AI Builder</h1>
-          <p className="mt-4 text-lg text-muted-foreground">智能开发平台</p>
-        </div>
-      </main>
-    </div>
-  );
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
+/**
+ * 根路径首页
+ *
+ * 根据用户登录状态进行路由分发：
+ * - 已登录用户：重定向到受保护的 dashboard
+ * - 未登录用户：重定向到登录页
+ */
+export default async function Home() {
+  const user = await currentUser();
+
+  if (user) {
+    // 已登录用户重定向到 dashboard
+    redirect("/dashboard");
+  } else {
+    // 未登录用户重定向到登录页
+    redirect("/sign-in");
+  }
 }
