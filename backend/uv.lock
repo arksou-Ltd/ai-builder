@@ -122,8 +122,8 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "arksou-kernel-framework"
-version = "0.3.5"
-source = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.6#acbd26a377e7ece4d2132929acdd8ea1bd8bf824" }
+version = "0.3.8"
+source = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.8#4a836450adba3223342ca3951f287cfaa1808084" }
 dependencies = [
     { name = "fastapi" },
     { name = "opentelemetry-api" },
@@ -441,7 +441,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "arksou-kernel-framework", extras = ["all"], git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.6" }]
+requires-dist = [{ name = "arksou-kernel-framework", extras = ["all"], git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.8" }]
 
 [[package]]
 name = "coverage"

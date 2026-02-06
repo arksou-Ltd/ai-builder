@@ -293,8 +293,8 @@ So that 我可以按架构约束进行模块化开发且避免循环依赖。
 
 **Given** 后端 workspace 初始化完成
 **When** 配置模块依赖关系
-**Then** 依赖链满足：`app-api → common-kernel → arksou-kernel-framework@v0.3.6`
-**And** `common-kernel` 通过 `git+ssh` 引入 `arksou-kernel-framework[all]@v0.3.6`
+**Then** 依赖链满足：`app-api → common-kernel → arksou-kernel-framework@v0.3.8`
+**And** `common-kernel` 通过 `git+ssh` 引入 `arksou-kernel-framework[all]@v0.3.8`
 **And** `app-api` 通过 workspace 引用依赖 `common-kernel`
 **And** `app-api` 依赖 `fastapi` 与 `uvicorn[standard]`
 **And** 仓库中不存在 `backend/agent-kernel`，且任何配置/依赖中都不引用它

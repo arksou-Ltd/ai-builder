@@ -222,10 +222,10 @@ ai-builder/
 #### 依赖链路
 
 ```
-app-api → common-kernel → arksou-kernel-framework[all] v0.3.6
+app-api → common-kernel → arksou-kernel-framework[all] v0.3.8
 ```
 
-#### arksou-kernel-framework 完整模块 (v0.3.6)
+#### arksou-kernel-framework 完整模块 (v0.3.8)
 
 框架提供 9 个独立模块，覆盖企业级 FastAPI 应用的所有基础设施需求：
 
@@ -291,7 +291,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.6" }
+arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.8" }
 
 [build-system]
 requires = ["hatchling"]
@@ -418,7 +418,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.6" }
+arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "v0.3.8" }
 ```
 
 #### app-api/pyproject.toml
