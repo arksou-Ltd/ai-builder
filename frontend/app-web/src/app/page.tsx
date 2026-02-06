@@ -1,21 +1,21 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 /**
  * 根路径首页
  *
- * 根据用户登录状态进行路由分发：
- * - 已登录用户：重定向到受保护的 dashboard
- * - 未登录用户：重定向到登录页
+ * 中间件统一处理根路径跳转：
+ * - 已登录 → /dashboard（无需经过 /sign-in）
+ * - 未登录 → /sign-in
+ *
+ * 此页面作为 fallback 保护，区分已登录/未登录状态
  */
 export default async function Home() {
-  const user = await currentUser();
+  const { userId } = await auth();
 
-  if (user) {
-    // 已登录用户重定向到 dashboard
+  if (userId) {
     redirect("/dashboard");
-  } else {
-    // 未登录用户重定向到登录页
-    redirect("/sign-in");
   }
+
+  redirect("/sign-in");
 }
