@@ -12,17 +12,27 @@ const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 const isApiRoute = createRouteMatcher(["/(api|trpc)(.*)"]);
 
 /**
+ * Webhook 路由匹配器（公开 API，跳过用户态 auth 校验）
+ */
+const isWebhookRoute = createRouteMatcher(["/api/v1/webhook/(.*)"]);
+
+/**
  * Clerk 中间件配置
  *
  * 路由分支策略：
+ * ⓪ Webhook 路由：跳过用户态 auth，由后端 Svix 签名验证保护
  * ① 根路径 / 认证页面：auth() 轻量检查 → 已登录跳 dashboard
  * ② 受保护 API 路由：未登录返回 401 JSON（而非 auth.protect() 的 404）
  * ③ 其余页面路由：auth.protect() 保护（自动重定向 sign-in 并携带 returnBackUrl）
- *
- * 备注：如需放行 webhook 等公开 API，请显式加白名单匹配器，并在 handler 内严格校验签名。
  */
 export default clerkMiddleware(async (auth, request) => {
   const path = request.nextUrl.pathname;
+
+  // ⓪ Webhook 路由：直接放行，不做用户态 auth 校验
+  // 安全由后端 Svix 签名验证保障
+  if (isWebhookRoute(request)) {
+    return NextResponse.next();
+  }
 
   // ① 根路径 & 认证页面：检查是否已登录 → 跳转 dashboard
   if (path === "/" || isAuthRoute(request)) {

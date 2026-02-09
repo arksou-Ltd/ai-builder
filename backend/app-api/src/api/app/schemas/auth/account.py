@@ -1,6 +1,6 @@
 """账户信息 Schema。
 
-定义账户相关的请求和响应数据结构。
+定义账户相关的响应数据结构。
 """
 
 from arksou.kernel.framework.base import BaseSchema
@@ -10,19 +10,14 @@ from pydantic import Field
 class AccountResponse(BaseSchema):
     """账户信息响应模型。
 
-    用于 /auth/me 端点返回当前用户信息。
+    用于 /auth/me 端点返回当前认证用户信息。
+    端点已强制认证，所有字段基于 ClerkAccount 填充。
     """
 
-    id: str | None = Field(
-        default=None,
-        description="账户唯一标识符",
+    id: str = Field(
+        description="账户唯一标识符（Clerk Account ID）",
     )
-    is_authenticated: bool = Field(
-        default=False,
-        description="是否已认证",
-    )
-    display_name: str | None = Field(
-        default=None,
+    display_name: str = Field(
         description="显示名称",
     )
     email: str | None = Field(
@@ -35,15 +30,8 @@ class AccountResponse(BaseSchema):
             "examples": [
                 {
                     "id": "user_2abc123def456",
-                    "is_authenticated": True,
                     "display_name": "张三",
                     "email": "zhangsan@example.com",
-                },
-                {
-                    "id": None,
-                    "is_authenticated": False,
-                    "display_name": None,
-                    "email": None,
                 },
             ]
         }

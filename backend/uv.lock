@@ -85,6 +85,7 @@ dependencies = [
     { name = "pyjwt", extra = ["crypto"] },
     { name = "python-multipart" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "svix" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -115,6 +116,7 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.25.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.46" },
+    { name = "svix", specifier = ">=1.60.0" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'dev'", specifier = ">=4.10.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.0" },
 ]
@@ -122,8 +124,8 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "arksou-kernel-framework"
-version = "0.3.8"
-source = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.8#4a836450adba3223342ca3951f287cfaa1808084" }
+version = "0.3.9"
+source = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.9#9bd54e16d7be9a4f4eef71f912cfdd2c9df066e6" }
 dependencies = [
     { name = "fastapi" },
     { name = "opentelemetry-api" },
@@ -150,13 +152,14 @@ all = [
     { name = "hiredis" },
     { name = "msgpack" },
     { name = "orjson" },
-    { name = "pyjwt" },
+    { name = "pyjwt", extra = ["crypto"] },
     { name = "pymysql" },
     { name = "python-multipart" },
     { name = "python-redis-lock" },
     { name = "redis" },
     { name = "snowflake-id" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "svix" },
 ]
 
 [[package]]
@@ -206,6 +209,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/7a/15e37d45e7f7c94facc1e9148c0e455e8f33c08f0b8a0b1deb2c5171771b/asyncpg-0.31.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:8df714dba348efcc162d2adf02d213e5fab1bd9f557e1305633e851a61814a7a", size = 3429426, upload-time = "2025-11-24T23:26:41.032Z" },
     { url = "https://files.pythonhosted.org/packages/13/d5/71437c5f6ae5f307828710efbe62163974e71237d5d46ebd2869ea052d10/asyncpg-0.31.0-cp314-cp314t-win32.whl", hash = "sha256:1b41f1afb1033f2b44f3234993b15096ddc9cd71b21a42dbd87fc6a57b43d65d", size = 614495, upload-time = "2025-11-24T23:26:42.659Z" },
     { url = "https://files.pythonhosted.org/packages/3c/d7/8fb3044eaef08a310acfe23dae9a8e2e07d305edc29a53497e52bc76eca7/asyncpg-0.31.0-cp314-cp314t-win_amd64.whl", hash = "sha256:bd4107bb7cdd0e9e65fae66a62afd3a249663b844fa34d479f6d5b3bef9c04c3", size = 706062, upload-time = "2025-11-24T23:26:44.086Z" },
+]
+
+[[package]]
+name = "attrs"
+version = "25.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/5c/685e6633917e101e5dcb62b9dd76946cbb57c26e133bae9e0cd36033c0a9/attrs-25.4.0.tar.gz", hash = "sha256:16d5969b87f0859ef33a48b35d55ac1be6e42ae49d5e853b597db70c35c57e11", size = 934251, upload-time = "2025-10-06T13:54:44.725Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/2a/7cc015f5b9f5db42b7d48157e23356022889fc354a2813c15934b7cb5c0e/attrs-25.4.0-py3-none-any.whl", hash = "sha256:adcf7e2a1fb3b36ac48d97835bb6d8ade15b8dcce26aba8bf1d14847b57a3373", size = 67615, upload-time = "2025-10-06T13:54:43.17Z" },
 ]
 
 [[package]]
@@ -441,7 +453,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "arksou-kernel-framework", extras = ["all"], git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.8" }]
+requires-dist = [{ name = "arksou-kernel-framework", extras = ["all"], git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git?tag=v0.3.9" }]
 
 [[package]]
 name = "coverage"
@@ -589,6 +601,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c5/d9/d64199c14a0d4c476df46c82470a3ce45c8d183a6796cfb5e66533b3663c/debugpy-1.8.20-cp314-cp314-win32.whl", hash = "sha256:352036a99dd35053b37b7803f748efc456076f929c6a895556932eaf2d23b07f", size = 5331407, upload-time = "2026-01-29T23:03:58.481Z" },
     { url = "https://files.pythonhosted.org/packages/e0/d9/1f07395b54413432624d61524dfd98c1a7c7827d2abfdb8829ac92638205/debugpy-1.8.20-cp314-cp314-win_amd64.whl", hash = "sha256:a98eec61135465b062846112e5ecf2eebb855305acc1dfbae43b72903b8ab5be", size = 5372521, upload-time = "2026-01-29T23:03:59.864Z" },
     { url = "https://files.pythonhosted.org/packages/e0/c3/7f67dea8ccf8fdcb9c99033bbe3e90b9e7395415843accb81428c441be2d/debugpy-1.8.20-py2.py3-none-any.whl", hash = "sha256:5be9bed9ae3be00665a06acaa48f8329d2b9632f15fd09f6a9a8c8d9907e54d7", size = 5337658, upload-time = "2026-01-29T23:04:17.404Z" },
+]
+
+[[package]]
+name = "deprecated"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wrapt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/49/85/12f0a49a7c4ffb70572b6c2ef13c90c88fd190debda93b23f026b25f9634/deprecated-1.3.1.tar.gz", hash = "sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223", size = 2932523, upload-time = "2025-10-30T08:19:02.757Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl", hash = "sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f", size = 11298, upload-time = "2025-10-30T08:19:00.758Z" },
 ]
 
 [[package]]
@@ -1614,6 +1638,20 @@ asyncio = [
 ]
 
 [[package]]
+name = "standardwebhooks"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "deprecated" },
+    { name = "httpx" },
+    { name = "python-dateutil" },
+    { name = "types-deprecated" },
+    { name = "types-python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/48/c8/4c9705c0499c8b5ac54a082539d4cdf1c6b3977b7475d60fcb7c666efc86/standardwebhooks-1.0.0.tar.gz", hash = "sha256:d94b99c0dcea84156e03adad94f8dba32d5454cc68e12ec2c824051b55bb67ff", size = 4919, upload-time = "2024-01-12T14:57:43.193Z" }
+
+[[package]]
 name = "starlette"
 version = "0.50.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1636,6 +1674,25 @@ wheels = [
 ]
 
 [[package]]
+name = "svix"
+version = "1.84.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "deprecated" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "python-dateutil" },
+    { name = "standardwebhooks" },
+    { name = "types-deprecated" },
+    { name = "types-python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ef/87/0149044a9fea585aa9ab3bd140cc3b89c808592ee8da4a1a83053765aaf5/svix-1.84.1.tar.gz", hash = "sha256:ac3e32f66c5fff4fe2c65520122a37b640f38bc3ae4d1ccef65bfeb4d54eb525", size = 58952, upload-time = "2025-12-30T02:35:07.385Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/8f/dbcd0b40f4e599ee8578f395d6e0a8c8aafb4bdd3fd7aef2204491626f69/svix-1.84.1-py3-none-any.whl", hash = "sha256:22834fd3cd6f31e65f7da00b768e433118e032fe34b5b067394854b1442f0759", size = 131557, upload-time = "2025-12-30T02:35:05.634Z" },
+]
+
+[[package]]
 name = "testcontainers"
 version = "4.14.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1649,6 +1706,24 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8b/02/ef62dec9e4f804189c44df23f0b86897c738d38e9c48282fcd410308632f/testcontainers-4.14.1.tar.gz", hash = "sha256:316f1bb178d829c003acd650233e3ff3c59a833a08d8661c074f58a4fbd42a64", size = 80148, upload-time = "2026-01-31T23:13:46.915Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/31/5e7b23f9e43ff7fd46d243808d70c5e8daf3bc08ecf5a7fb84d5e38f7603/testcontainers-4.14.1-py3-none-any.whl", hash = "sha256:03dfef4797b31c82e7b762a454b6afec61a2a512ad54af47ab41e4fa5415f891", size = 125640, upload-time = "2026-01-31T23:13:45.464Z" },
+]
+
+[[package]]
+name = "types-deprecated"
+version = "1.3.1.20260130"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/97/9924e496f88412788c432891cacd041e542425fe0bffff4143a7c1c89ac4/types_deprecated-1.3.1.20260130.tar.gz", hash = "sha256:726b05e5e66d42359b1d6631835b15de62702588c8a59b877aa4b1e138453450", size = 8455, upload-time = "2026-01-30T03:58:17.401Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/b2/6f920582af7efcd37165cd6321707f3ad5839dd24565a8a982f2bd9c6fd1/types_deprecated-1.3.1.20260130-py3-none-any.whl", hash = "sha256:593934d85c38ca321a9d301f00c42ffe13e4cf830b71b10579185ba0ce172d9a", size = 9077, upload-time = "2026-01-30T03:58:16.633Z" },
+]
+
+[[package]]
+name = "types-python-dateutil"
+version = "2.9.0.20260124"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/41/4f8eb1ce08688a9e3e23709ed07089ccdeaf95b93745bfb768c6da71197d/types_python_dateutil-2.9.0.20260124.tar.gz", hash = "sha256:7d2db9f860820c30e5b8152bfe78dbdf795f7d1c6176057424e8b3fdd1f581af", size = 16596, upload-time = "2026-01-24T03:18:42.975Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5a/c2/aa5e3f4103cc8b1dcf92432415dde75d70021d634ecfd95b2e913cf43e17/types_python_dateutil-2.9.0.20260124-py3-none-any.whl", hash = "sha256:f802977ae08bf2260142e7ca1ab9d4403772a254409f7bbdf652229997124951", size = 18266, upload-time = "2026-01-24T03:18:42.155Z" },
 ]
 
 [[package]]

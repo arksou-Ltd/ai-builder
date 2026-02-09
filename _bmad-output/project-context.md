@@ -33,10 +33,10 @@ _此文件包含 AI 代理在此项目中实现代码时必须遵循的关键规
 - SQLAlchemy 2.0 (异步 ORM)
 - PostgreSQL 16+ (数据库)
 - Pydantic ≥2.10.0 (数据验证)
-- arksou-kernel-framework v0.3.8 (基础框架)
+- arksou-kernel-framework (基础框架，版本见 common-kernel/pyproject.toml)
 
 ### Critical Version Constraints
-- arksou-kernel-framework 必须从 Git SSH 源安装 (v0.3.8)
+- arksou-kernel-framework 必须从 Git SSH 源安装 (版本由 common-kernel/pyproject.toml tag 管理)
 - Python 必须 ≥3.12（使用 `.python-version` 锁定）
 - 前后端完全分离，独立部署
 
@@ -81,7 +81,7 @@ _此文件包含 AI 代理在此项目中实现代码时必须遵循的关键规
 
 #### FastAPI (后端)
 
-**arksou-kernel-framework v0.3.8 完整能力清单（禁止重复实现）：**
+**arksou-kernel-framework 完整能力清单（禁止重复实现）：**
 
 框架采用可选依赖设计，ai-builder 使用 `[all]` 安装全部模块：
 - 核心（必装）：fastapi, pydantic, structlog, opentelemetry

@@ -25,14 +25,31 @@ def load_toml(path: Path) -> dict:
     return tomllib.loads(path.read_text(encoding="utf-8"))
 
 
+def get_expected_framework_version() -> tuple[str, str]:
+    """从 common-kernel/pyproject.toml 读取期望的框架版本。
+
+    Returns:
+        (version, tag) 元组，如 ("0.3.9", "v0.3.9")
+    """
+    backend_root = get_backend_root()
+    pyproject_path = backend_root / "common-kernel" / "pyproject.toml"
+    config = load_toml(pyproject_path)
+    sources = config.get("tool", {}).get("uv", {}).get("sources", {})
+    tag = sources["arksou-kernel-framework"]["tag"]  # e.g. "v0.3.9"
+    version = tag.lstrip("v")  # e.g. "0.3.9"
+    return version, tag
+
+
 class TestDependencyChainVersion:
     """Dependency version verification tests."""
 
     def test_arksou_kernel_framework_version(self) -> None:
-        """arksou-kernel-framework version must be exactly 0.3.8 (tag v0.3.8)."""
+        """arksou-kernel-framework version must match the tag in common-kernel/pyproject.toml."""
+        expected_version, expected_tag = get_expected_framework_version()
         version = importlib.metadata.version("arksou-kernel-framework")
-        assert version == "0.3.8", (
-            f"arksou-kernel-framework version mismatch: expected 0.3.8, got {version}"
+        assert version == expected_version, (
+            f"arksou-kernel-framework version mismatch: "
+            f"expected {expected_version} (tag {expected_tag}), got {version}"
         )
 
     def test_fastapi_minimum_version(self) -> None:
@@ -95,12 +112,13 @@ class TestDependencySourceConfiguration:
 
     These tests verify the CRITICAL configuration constraints using
     structured TOML parsing (not string matching):
-    - arksou-kernel-framework must come from Git SSH source with tag v0.3.8
+    - arksou-kernel-framework must come from Git SSH source with pinned tag
     - common-kernel must use workspace source
     """
 
     def test_common_kernel_git_ssh_source_in_pyproject(self) -> None:
         """common-kernel/pyproject.toml must use Git SSH source for framework."""
+        expected_version, expected_tag = get_expected_framework_version()
         backend_root = get_backend_root()
         pyproject_path = backend_root / "common-kernel" / "pyproject.toml"
 
@@ -127,8 +145,8 @@ class TestDependencySourceConfiguration:
         assert "ssh://git@github-arksou" in framework_source["git"], (
             "arksou-kernel-framework must use Git SSH source (ssh://git@github-arksou)"
         )
-        assert framework_source.get("tag") == "v0.3.8", (
-            f"arksou-kernel-framework must be pinned to tag v0.3.8, "
+        assert framework_source.get("tag") == expected_tag, (
+            f"arksou-kernel-framework must be pinned to tag {expected_tag}, "
             f"got: {framework_source.get('tag')}"
         )
 
@@ -150,7 +168,8 @@ class TestDependencySourceConfiguration:
         )
 
     def test_uv_lock_contains_git_source_with_tag(self) -> None:
-        """uv.lock must contain Git source with tag v0.3.8 for arksou-kernel-framework."""
+        """uv.lock must contain Git source with pinned tag for arksou-kernel-framework."""
+        _expected_version, expected_tag = get_expected_framework_version()
         backend_root = get_backend_root()
         uv_lock_path = backend_root / "uv.lock"
 
@@ -169,10 +188,12 @@ class TestDependencySourceConfiguration:
             "arksou-kernel-framework must come from Git SSH source in uv.lock"
         )
 
-        # Verify tag v0.3.8 is locked in the git URL
-        # uv.lock format: ...?tag=v0.3.8#<commit_sha>
-        assert "tag=v0.3.8" in content, (
-            "arksou-kernel-framework must be pinned to tag v0.3.8 in uv.lock"
+        # Verify pinned tag is locked in the git URL
+        # uv.lock format: ...?tag=<tag>#<commit_sha>
+        expected_tag_param = f"tag={expected_tag}"
+        assert expected_tag_param in content, (
+            f"arksou-kernel-framework must be pinned to {expected_tag} in uv.lock, "
+            f"'{expected_tag_param}' not found"
         )
 
     def test_workspace_members_exact_configuration(self) -> None:

@@ -1,44 +1,32 @@
 """应用配置模块。
 
-使用 pydantic-settings 管理环境变量和应用配置。
+使用框架 BaseAppSettings 管理通用配置，ClerkSettings 管理 Clerk 认证配置。
 """
 
 from functools import lru_cache
-from typing import Literal
 
-from pydantic import PostgresDsn, computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from arksou.kernel.framework.app import BaseAppSettings
+from arksou.kernel.framework.auth.clerk import ClerkSettings
+from pydantic import Field, PostgresDsn, computed_field
 
 
-class Settings(BaseSettings):
+class Settings(BaseAppSettings):
     """应用配置类。
 
-    从环境变量加载配置，支持 .env 文件。
+    继承框架 BaseAppSettings，自动获得 redis_*、cors_* 等通用配置。
+    仅需声明应用特有的配置项。
     """
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-    )
+    # 应用配置（BaseAppSettings 已提供 app_name, app_env, debug）
+    app_version: str = Field(default="0.1.0", description="应用版本")
+    api_prefix: str = Field(default="/api/v1", description="API 路由前缀")
 
-    # 应用基本配置
-    app_name: str = "AI Builder API"
-    app_version: str = "0.1.0"
-    debug: bool = False
-    environment: Literal["development", "staging", "production"] = "development"
-
-    # API 配置
-    api_prefix: str = "/api/v1"
-
-    # 数据库配置
-    # 注意：生产环境必须通过环境变量设置，默认值仅供本地开发
-    database_host: str = "localhost"
-    database_port: int = 5432
-    database_user: str = "postgres"
-    database_password: str = ""  # 必须通过 DATABASE_PASSWORD 环境变量设置
-    database_name: str = "ai_builder"
+    # 数据库配置（框架不含 DB 配置，需自行声明）
+    database_host: str = Field(default="localhost", description="数据库主机")
+    database_port: int = Field(default=5432, description="数据库端口")
+    database_user: str = Field(default="postgres", description="数据库用户")
+    database_password: str = Field(default="", description="数据库密码")
+    database_name: str = Field(default="ai_builder", description="数据库名称")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -55,17 +43,21 @@ class Settings(BaseSettings):
             )
         )
 
-    # CORS 配置
-    cors_origins: list[str] = ["http://localhost:3000"]
-
     # 日志配置
-    log_level: str = "INFO"
+    log_level: str = Field(default="INFO", description="日志级别")
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """获取缓存的配置实例。"""
+    """获取缓存的应用配置实例。"""
     return Settings()
 
 
+@lru_cache
+def get_clerk_settings() -> ClerkSettings:
+    """获取缓存的 Clerk 配置实例。"""
+    return ClerkSettings()
+
+
 settings = get_settings()
+clerk_settings = get_clerk_settings()

@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               "用户"}
           </span>
           <div data-testid="user-avatar">
-            <UserButton afterSignOutUrl="/sign-in" />
+            <UserButton />
           </div>
         </div>
       </header>

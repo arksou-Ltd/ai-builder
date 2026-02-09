@@ -33,7 +33,7 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <ClerkProvider appearance={{ cssLayerName: "clerk" }}>
+    <ClerkProvider afterSignOutUrl="/sign-in" appearance={{ cssLayerName: "clerk" }}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </ClerkProvider>
   );
