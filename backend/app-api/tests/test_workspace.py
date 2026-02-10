@@ -116,7 +116,7 @@ async def cleanup_test_data(test_engine):
     yield
     async with test_engine.connect() as conn:
         await conn.execute(
-            text("DELETE FROM workspace_workspaces WHERE owner_clerk_id LIKE 'user_test_%'")
+            text("DELETE FROM workspace_workspaces WHERE account_id LIKE 'user_test_%'")
         )
         await conn.commit()
 
@@ -207,6 +207,64 @@ class TestCreateWorkspaceValidation:
         assert response.status_code == 200
         data = response.json()
         assert data["data"]["name"] == name_50
+
+    async def test_illegal_chars_returns_422(self, client: httpx.AsyncClient):
+        """包含非法字符的名称应返回 422。"""
+        illegal_names = [
+            "ws<script>",   # HTML 标签
+            "ws;DROP TABLE", # SQL 注入
+            "ws@#$%",       # 特殊符号
+            "ws\x00null",   # 控制字符
+            "ws/path",      # 路径分隔符
+        ]
+        for name in illegal_names:
+            response = await client.post(
+                "/api/v1/workspaces",
+                json={"name": name},
+            )
+            assert response.status_code == 422, f"Expected 422 for name: {name!r}"
+
+    async def test_chinese_name_succeeds(self, client: httpx.AsyncClient):
+        """中文名称应成功创建。"""
+        name = f"测试空间-{uuid.uuid4().hex[:6]}"
+        response = await client.post(
+            "/api/v1/workspaces",
+            json={"name": name},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["data"]["name"] == name
+
+    async def test_name_with_allowed_special_chars_succeeds(self, client: httpx.AsyncClient):
+        """允许的特殊字符（连字符、下划线、点号）应成功。"""
+        name = f"my-workspace_v1.0-{uuid.uuid4().hex[:4]}"
+        response = await client.post(
+            "/api/v1/workspaces",
+            json={"name": name},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["data"]["name"] == name
+
+    async def test_name_with_newline_returns_422(self, client: httpx.AsyncClient):
+        """包含换行符的名称应返回 422。"""
+        response = await client.post(
+            "/api/v1/workspaces",
+            json={"name": "abc\nxyz"},
+        )
+
+        assert response.status_code == 422
+
+    async def test_name_with_tab_returns_422(self, client: httpx.AsyncClient):
+        """包含制表符的名称应返回 422。"""
+        response = await client.post(
+            "/api/v1/workspaces",
+            json={"name": "abc\txyz"},
+        )
+
+        assert response.status_code == 422
 
 
 # --- 重名冲突测试 ---

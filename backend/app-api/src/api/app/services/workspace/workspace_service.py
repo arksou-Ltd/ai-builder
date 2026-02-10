@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from arksou.kernel.framework.base import ConflictException
+from arksou.kernel.framework.base import ConflictException, InternalServerException
 from kernel.common.models.workspace import Workspace
 
 from api.app.schemas.workspace.workspace_schema import WorkspaceCreate, WorkspaceResponse
@@ -21,19 +21,19 @@ logger = structlog.get_logger(__name__)
 class WorkspaceService:
     """工作空间服务类。
 
-    处理工作空间的创建和查询，强制 owner_clerk_id 维度数据隔离。
+    处理工作空间的创建和查询，强制 account_id 维度数据隔离。
     """
 
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
     async def create_workspace(
-        self, owner_clerk_id: str, payload: WorkspaceCreate
+        self, account_id: str, payload: WorkspaceCreate
     ) -> WorkspaceResponse:
         """创建工作空间。
 
         Args:
-            owner_clerk_id: 当前用户的 Clerk ID
+            account_id: 当前用户标识（来自 ClerkAccount.clerk_account_id）
             payload: 创建请求数据
 
         Returns:
@@ -44,17 +44,25 @@ class WorkspaceService:
         """
         workspace = Workspace(
             name=payload.name,
-            owner_clerk_id=owner_clerk_id,
+            account_id=account_id,
         )
         self._db.add(workspace)
 
         try:
             await self._db.flush()
-        except IntegrityError:
+        except IntegrityError as exc:
             await self._db.rollback()
+            error_text = str(exc.orig).lower() if exc.orig is not None else str(exc).lower()
+            if "uq_workspace_owner_name" not in error_text:
+                logger.exception(
+                    "workspace_create_integrity_error",
+                    account_id=account_id,
+                    name=payload.name,
+                )
+                raise InternalServerException("工作空间创建失败，请稍后重试") from exc
             logger.warning(
                 "workspace_name_conflict",
-                owner_clerk_id=owner_clerk_id,
+                account_id=account_id,
                 name=payload.name,
             )
             raise ConflictException("工作空间名称已存在")
@@ -66,23 +74,23 @@ class WorkspaceService:
         logger.info(
             "workspace_created",
             workspace_id=workspace.id,
-            owner_clerk_id=owner_clerk_id,
+            account_id=account_id,
         )
 
         return WorkspaceResponse.model_validate(workspace)
 
-    async def list_workspaces(self, owner_clerk_id: str) -> list[WorkspaceResponse]:
+    async def list_workspaces(self, account_id: str) -> list[WorkspaceResponse]:
         """获取当前用户的工作空间列表。
 
         Args:
-            owner_clerk_id: 当前用户的 Clerk ID
+            account_id: 当前用户标识（来自 ClerkAccount.clerk_account_id）
 
         Returns:
             list[WorkspaceResponse]: 工作空间列表（按创建时间倒序）
         """
         stmt = (
             select(Workspace)
-            .where(Workspace.owner_clerk_id == owner_clerk_id)
+            .where(Workspace.account_id == account_id)
             .order_by(Workspace.created_at.desc())
         )
         result = await self._db.execute(stmt)
