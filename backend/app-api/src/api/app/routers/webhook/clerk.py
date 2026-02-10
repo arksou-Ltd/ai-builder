@@ -11,10 +11,10 @@ from fastapi import APIRouter, Request
 from api.app.deps.redis import RedisServiceDep
 from api.app.services.webhook.clerk_webhook_service import ClerkWebhookService
 
-router = APIRouter()
+webhook_router = APIRouter(prefix="/webhooks", tags=["Webhook"])
 
 
-@router.post(
+@webhook_router.post(
     "/clerk",
     summary="Clerk Webhook 回调",
     description="接收 Clerk 平台的 Webhook 事件（session.removed 等），通过 Svix 签名验证后处理。",

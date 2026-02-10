@@ -1,15 +1,12 @@
 """数据库会话依赖模块。
 
-使用框架 get_async_session 提供 FastAPI 依赖项以注入数据库会话。
+使用框架 create_db_deps 一行创建数据库依赖。
+配置通过 DB_* 环境变量自动读取（参见 .env）。
 """
 
-from typing import Annotated
+from arksou.kernel.framework.rdbms import create_db_deps
 
-from arksou.kernel.framework.rdbms import get_async_session
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+# 使用框架工厂函数创建依赖，默认 PostgreSQL + asyncpg
+get_db, DbSession = create_db_deps()
 
-# 类型别名，用于依赖注入
-DbSession = Annotated[AsyncSession, Depends(get_async_session)]
-
-__all__ = ["DbSession", "get_async_session"]
+__all__ = ["DbSession", "get_db"]

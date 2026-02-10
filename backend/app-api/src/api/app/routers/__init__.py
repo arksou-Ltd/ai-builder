@@ -6,13 +6,13 @@
 from fastapi import APIRouter
 
 from api.app.routers.auth import router as auth_router
-from api.app.routers.webhook import router as webhook_router
+from api.app.routers.webhook import webhook_router
 
 # 主路由器（携带 API 版本前缀）
 router = APIRouter(prefix="/api/v1")
 
 # 注册子路由
 router.include_router(auth_router, prefix="/auth", tags=["认证"])
-router.include_router(webhook_router, prefix="/webhook", tags=["Webhook"])
+router.include_router(webhook_router)
 
 __all__: list[str] = ["router"]

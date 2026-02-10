@@ -14,7 +14,7 @@ const isApiRoute = createRouteMatcher(["/(api|trpc)(.*)"]);
 /**
  * Webhook 路由匹配器（公开 API，跳过用户态 auth 校验）
  */
-const isWebhookRoute = createRouteMatcher(["/api/v1/webhook/(.*)"]);
+const isWebhookRoute = createRouteMatcher(["/api/v1/webhooks/(.*)"]);
 
 /**
  * Clerk 中间件配置

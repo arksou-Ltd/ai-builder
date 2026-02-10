@@ -51,8 +51,31 @@ class ClerkWebhookService:
         # 框架验签（失败自动抛出 UnauthorizedException）
         self._verifier.verify(body, headers)
 
-        # 解析事件
-        payload = json.loads(body)
+        # 记录原始请求数据（调试用）
+        logger.debug(
+            "Clerk webhook 原始请求",
+            body_size=len(body),
+            body_preview=body[:500].decode("utf-8", errors="replace"),
+            headers=headers,
+        )
+
+        # 解析事件（防御空 body / 非 JSON / null 等异常情况）
+        try:
+            payload = json.loads(body)
+        except (json.JSONDecodeError, ValueError):
+            logger.warning(
+                "Clerk webhook 请求体无法解析为 JSON",
+                body_preview=body[:200].decode("utf-8", errors="replace"),
+            )
+            return
+
+        if not isinstance(payload, dict):
+            logger.warning(
+                "Clerk webhook 请求体不是 JSON 对象",
+                payload_type=type(payload).__name__,
+            )
+            return
+
         event_type = payload.get("type", "")
 
         logger.info("Clerk webhook 收到事件", event_type=event_type)
@@ -96,6 +119,7 @@ class ClerkWebhookService:
             workspace_id=None,
             timestamp=timestamp,
         )
+        logger.debug("session.removed 完整 payload", raw_payload=payload)
 
     async def _handle_user_event(self, event_type: str, payload: dict) -> None:
         """处理 user.* 事件（预留扩展点）。

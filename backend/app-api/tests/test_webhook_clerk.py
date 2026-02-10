@@ -7,7 +7,7 @@ D3. Redis 撤销键写入与 TTL 测试
 D4. 重复事件幂等测试
 
 严禁使用 Mock/Stub/Fake，所有测试必须使用真实依赖。
-使用 testcontainers 启动真实 Redis 实例。
+使用 .env 中配置的真实 Redis 服务。
 使用 Svix Webhook 类生成真实签名。
 """
 
@@ -16,12 +16,10 @@ import json
 from collections.abc import AsyncGenerator
 from typing import Any
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from redis.asyncio import Redis
 from svix.webhooks import Webhook
-from testcontainers.redis import RedisContainer
 
 # 测试用 Svix 签名密钥
 TEST_WEBHOOK_SECRET = "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw"
@@ -55,31 +53,45 @@ def _build_signed_request(
     return body_str, headers
 
 
-@pytest.fixture(scope="module")
-def redis_container():
-    """启动真实 Redis 容器（模块级共享）。"""
-    with RedisContainer("redis:7-alpine") as container:
-        yield container
+def _build_signed_raw_request(
+    raw_body: str,
+    secret: str = TEST_WEBHOOK_SECRET,
+) -> tuple[str, dict[str, str]]:
+    """使用真实 Svix 签名构建任意 raw body 的 webhook 请求。
+
+    用于测试非标准 body（null、空字符串、数组等）的边界情况。
+
+    Args:
+        raw_body: 原始请求体字符串
+        secret: Svix 签名密钥
+
+    Returns:
+        (body_str, headers_dict) 元组
+    """
+    wh = Webhook(secret)
+    msg_id = f"msg_raw_{id(raw_body)}"
+    ts = datetime.datetime.now(tz=datetime.timezone.utc)
+    signature = wh.sign(msg_id, ts, raw_body)
+
+    headers = {
+        "svix-id": msg_id,
+        "svix-timestamp": str(int(ts.timestamp())),
+        "svix-signature": signature,
+        "content-type": "application/json",
+    }
+    return raw_body, headers
 
 
 @pytest_asyncio.fixture
-async def client(redis_container, monkeypatch) -> AsyncGenerator[AsyncClient, None]:
+async def client(monkeypatch) -> AsyncGenerator[AsyncClient, None]:
     """创建异步测试客户端。
 
-    为每次测试创建新的 FastAPI 应用，确保：
-    - Redis 指向 testcontainers 实例
+    使用 .env 中配置的真实 Redis 服务，确保：
+    - Redis 指向远程真实实例
     - Webhook 密钥使用测试密钥
-    - 应用 lifespan 正确初始化 Redis 连接池
+    - Redis 连接池在测试前手动初始化
     """
-    # 配置 Redis 环境变量
-    host = redis_container.get_container_host_ip()
-    port = str(redis_container.get_exposed_port(6379))
-    monkeypatch.setenv("REDIS_HOST", host)
-    monkeypatch.setenv("REDIS_PORT", port)
-    monkeypatch.setenv("REDIS_DB", "0")
-    monkeypatch.setenv("REDIS_PASSWORD", "")
-
-    # 配置 Webhook 签名密钥
+    # 覆盖 Webhook 签名密钥为测试密钥
     monkeypatch.setenv("CLERK_WEBHOOK_SECRET", TEST_WEBHOOK_SECRET)
 
     # 刷新 ClerkSettings 并注入 webhook service
@@ -93,31 +105,54 @@ async def client(redis_container, monkeypatch) -> AsyncGenerator[AsyncClient, No
 
     # 创建使用新配置的测试应用
     from arksou.kernel.framework.app import create_app
+    from arksou.kernel.framework.cache.connection import (
+        close_redis_pool,
+        init_redis_pool,
+    )
 
     from api.app.core.config import Settings
     from api.app.routers import router as api_router
 
     fresh_settings = Settings()
+
+    # 手动初始化 Redis 连接池（ASGITransport 不触发 lifespan）
+    redis_config = fresh_settings.get_redis_config()
+    await init_redis_pool(redis_config)
+
     test_app = create_app(
         fresh_settings,
         routers=[api_router],
+        enable_redis=False,  # 已手动初始化，避免 lifespan 重复初始化
     )
 
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
+    # 清理 Redis 连接池
+    await close_redis_pool()
+
 
 @pytest_asyncio.fixture
-async def redis_client(redis_container) -> AsyncGenerator[Redis, None]:
-    """创建直接连接 Redis 的客户端（用于验证写入结果）。"""
-    host = redis_container.get_container_host_ip()
-    port = int(redis_container.get_exposed_port(6379))
-    client = Redis(host=host, port=port, db=0, decode_responses=True)
+async def redis_client() -> AsyncGenerator[Redis, None]:
+    """创建直接连接 Redis 的客户端（用于验证写入结果）。
+
+    使用 .env 中配置的真实 Redis 服务。
+    """
+    from api.app.core.config import settings
+
+    client = Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        db=settings.redis_db,
+        password=settings.redis_password or None,
+        ssl=settings.redis_ssl,
+        decode_responses=True,
+    )
     try:
         yield client
     finally:
-        await client.close()
+        await client.aclose()
 
 
 def _session_removed_payload(
@@ -155,7 +190,7 @@ class TestD1SvixSignatureVerification:
         body, headers = _build_signed_request(payload)
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -182,7 +217,7 @@ class TestD1SvixSignatureVerification:
         }
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -200,7 +235,7 @@ class TestD1SvixSignatureVerification:
         body = json.dumps(payload)
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers={"content-type": "application/json"},
         )
@@ -217,7 +252,7 @@ class TestD1SvixSignatureVerification:
         body, headers = _build_signed_request(payload, secret=wrong_secret)
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -238,7 +273,7 @@ class TestD2SessionRemovedProcessing:
         body, headers = _build_signed_request(payload)
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -262,7 +297,7 @@ class TestD2SessionRemovedProcessing:
         body, headers = _build_signed_request(payload)
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -286,7 +321,7 @@ class TestD3RedisRevocationKeyAndTTL:
         body, headers = _build_signed_request(payload)
 
         response = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -297,7 +332,7 @@ class TestD3RedisRevocationKeyAndTTL:
         # 使用 SCAN 查找包含 session_id 的撤销键
         keys: list[str] = []
         async for key in redis_client.scan_iter(
-            match=f"*invalid*{session_id}*"
+            match=f"*session*{session_id}*"
         ):
             keys.append(key)
 
@@ -316,7 +351,7 @@ class TestD3RedisRevocationKeyAndTTL:
         body, headers = _build_signed_request(payload)
 
         await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body,
             headers=headers,
         )
@@ -324,7 +359,7 @@ class TestD3RedisRevocationKeyAndTTL:
         # 查找撤销键
         keys: list[str] = []
         async for key in redis_client.scan_iter(
-            match=f"*invalid*{session_id}*"
+            match=f"*session*{session_id}*"
         ):
             keys.append(key)
 
@@ -352,7 +387,7 @@ class TestD4IdempotentEventProcessing:
         # 第一次发送
         body1, headers1 = _build_signed_request(payload)
         response1 = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body1,
             headers=headers1,
         )
@@ -362,7 +397,7 @@ class TestD4IdempotentEventProcessing:
         # 第二次发送（重复事件）
         body2, headers2 = _build_signed_request(payload)
         response2 = await client.post(
-            "/api/v1/webhook/clerk",
+            "/api/v1/webhooks/clerk",
             content=body2,
             headers=headers2,
         )
@@ -372,7 +407,7 @@ class TestD4IdempotentEventProcessing:
         # 验证 Redis 中存在撤销键
         keys: list[str] = []
         async for key in redis_client.scan_iter(
-            match=f"*invalid*{session_id}*"
+            match=f"*session*{session_id}*"
         ):
             keys.append(key)
 
@@ -381,3 +416,53 @@ class TestD4IdempotentEventProcessing:
         # TTL 仍然有效（被重置）
         ttl = await redis_client.ttl(keys[0])
         assert ttl > 0, "撤销键 TTL 应仍然有效"
+
+
+class TestD5BodyParsingEdgeCases:
+    """D5. Body 解析边界情况测试。
+
+    覆盖 Clerk/Svix 可能发送非标准 body 导致 NoneType 错误的场景。
+    """
+
+    async def test_null_body_returns_success(self, client: AsyncClient) -> None:
+        """body 为 JSON null 时应优雅处理，返回 200 而不是抛异常。"""
+        body, headers = _build_signed_raw_request("null")
+
+        response = await client.post(
+            "/api/v1/webhooks/clerk",
+            content=body,
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["code"]["value"] == 2000000
+
+    async def test_empty_body_returns_401(self, client: AsyncClient) -> None:
+        """空 body 在 Svix 签名验证阶段被拒绝，返回 401。"""
+        body, headers = _build_signed_raw_request("")
+
+        response = await client.post(
+            "/api/v1/webhooks/clerk",
+            content=body,
+            headers=headers,
+        )
+
+        # 空 body 被 Svix 验签器拒绝，不会到达 body 解析逻辑
+        assert response.status_code == 401
+        data = response.json()
+        assert data["code"]["value"] == 4010000
+
+    async def test_array_body_returns_success(self, client: AsyncClient) -> None:
+        """body 为 JSON 数组时应优雅处理，返回 200 而不是抛异常。"""
+        body, headers = _build_signed_raw_request('[{"type": "test"}]')
+
+        response = await client.post(
+            "/api/v1/webhooks/clerk",
+            content=body,
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["code"]["value"] == 2000000

@@ -4,7 +4,7 @@
 """
 
 from api.app.deps.auth import ClerkAccount, CurrentClerkAccount, get_clerk_account
-from api.app.deps.database import DbSession
+from api.app.deps.database import DbSession, get_db
 from api.app.deps.redis import RedisServiceDep, get_redis_service
 
 __all__: list[str] = [
@@ -12,6 +12,7 @@ __all__: list[str] = [
     "CurrentClerkAccount",
     "get_clerk_account",
     "DbSession",
+    "get_db",
     "RedisServiceDep",
     "get_redis_service",
 ]
