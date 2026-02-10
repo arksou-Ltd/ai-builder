@@ -1,6 +1,6 @@
 # Story 2.2: 用户登出
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -91,7 +91,7 @@ so that 我可以安全退出系统。
 - [x] D2. `session.removed` 正常处理测试
 - [x] D3. Redis 撤销键写入与 TTL 测试
 - [x] D4. 重复事件幂等测试
-- [ ] D5. 前端手工验收：登录→登出→受保护页面/API 拦截
+- [x] D5. 前端手工验收：登录→登出→受保护页面/API 拦截
 
 ## Dev Notes
 
@@ -220,9 +220,9 @@ from arksou.kernel.framework.logging import get_logger
 
 ## Story Completion Status
 
-Status: in-progress
+Status: done
 
-Completion Note: 根据质量验证报告完成修订，已补齐阻塞前置项、优先级与降级策略
+Completion Note: 代码评审高/中优先级问题已修复，真实 Redis 环境下 Webhook 集成测试 13/13 通过，Story 状态更新为 done
 
 ## Dev Agent Record
 
@@ -238,10 +238,46 @@ Completion Note: 根据质量验证报告完成修订，已补齐阻塞前置项
   - 修复测试 Redis client `close()` → `aclose()` deprecation warning
   - 修复测试 SCAN 匹配模式（`*invalid*` → `*session*`，适配框架 `CacheNames.session()` 键格式）
   - 全量回归测试 35/35 通过（依赖链 22 + 烟雾 4 + Webhook 9）
+- 2026-02-10: D5 前端手工验收全部通过（用户 Arksou 在真实浏览器中执行）：
+  - 未登录访问 /dashboard → 重定向到 /sign-in ✅
+  - 未登录调用受保护 API /api/v1/auth/me → 返回 401 (4010000) ✅
+  - Google 登录 → 跳转 /dashboard → UserButton 显示 ✅
+  - 点击登出 → 跳转 /sign-in ✅
+  - 登出后访问受保护页面/API → 被拦截 ✅
+- 2026-02-10: 全量回归测试 38/38 通过（依赖链 22 + 烟雾 4 + Webhook 12），Story 标记为 review
+- 2026-02-10: Senior code review 自动修复高/中优先级问题：
+  - 修复前端受保护 API 未登录响应，统一返回 `Result` 契约结构（4010000）
+  - 修复 Clerk Webhook 调试日志，移除签名明文与 body preview，避免敏感信息泄露
+  - 补充“会话撤销后访问受保护资源返回 401”测试，覆盖 AC4 核心验证链路
+  - 校验结果：`npm -C frontend/app-web run lint` ✅、`pytest tests/test_smoke.py` ✅、`pytest tests/test_webhook_clerk.py`（使用 `backend/.env` 连接真实 Redis）13/13 ✅
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/2-2-sign-out.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
-- `backend/app-api/tests/test_webhook_clerk.py`（修复 Redis 连接池初始化和 deprecation warning）
-- `frontend/app-web/src/proxy.ts`（修复 webhook 路由匹配路径 webhook → webhooks）
+- `backend/app-api/src/api/app/services/webhook/clerk_webhook_service.py`（Webhook 日志头脱敏，避免泄露 `svix-signature`）
+- `backend/app-api/tests/test_webhook_clerk.py`（新增撤销会话访问受保护 API 返回 401 的验证）
+- `frontend/app-web/src/proxy.ts`（受保护 API 未登录统一返回 `Result` 契约）
+
+### Senior Developer Review (AI)
+
+- Reviewer: Arksou (AI)
+- Review Date: 2026-02-10
+- Outcome: Approve after fixes
+
+Fixed Findings:
+
+- [HIGH] 补齐 AC4 缺口：新增撤销后访问受保护 API 返回 401 的测试验证
+- [MEDIUM] 修复前端受保护 API 401 响应不符合 `Result` 契约的问题
+- [MEDIUM] 修复 Webhook 日志泄露风险（签名头明文与 body preview）
+- [MEDIUM] 同步 story 记录与实际改动文件，补齐可追溯性
+
+Validation Evidence:
+
+- `npm -C frontend/app-web run lint` 通过
+- `backend/app-api: pytest tests/test_smoke.py` 通过
+- `backend/app-api: pytest tests/test_webhook_clerk.py`（使用 `backend/.env`）13/13 通过
+
+### Change Log
+
+- 2026-02-10: 通过 code-review workflow 自动修复高/中优先级问题，补齐 AC4 测试证据链，统一 401 响应契约并完成日志脱敏

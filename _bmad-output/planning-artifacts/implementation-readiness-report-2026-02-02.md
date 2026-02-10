@@ -60,11 +60,11 @@ project: ai-builder
 #### 项目管理 (FR4-FR9)
 | FR | 需求描述 |
 |----|----------|
-| FR4 | 用户可以创建新项目并命名 |
+| FR4 | 用户可以创建新工作空间并命名 |
 | FR5 | 用户可以向项目中导入 1~10 个 GitHub 仓库 |
 | FR6 | 用户可以查看项目中已导入的仓库列表 |
 | FR7 | 用户可以从项目中移除已导入的仓库 |
-| FR8 | 用户可以删除项目 |
+| FR8 | 用户可以删除工作空间 |
 | FR9 | 系统可以自动识别导入仓库的项目类型 |
 
 #### AI 渠道配置 (FR10-FR13)
@@ -280,7 +280,7 @@ project: ai-builder
 | Epic | 用户价值? | 评估 |
 |------|----------|------|
 | Epic 1: Project Bootstrap | ❌ 无直接用户价值 | 🟠 技术基础设施（Greenfield 必需） |
-| Epic 2: Identity & Workspace Setup | ✅ 用户可登录/创建项目 | ✅ 通过 |
+| Epic 2: Identity & Workspace Setup | ✅ 用户可登录/创建工作空间 | ✅ 通过 |
 | Epic 3: Workflow Progress & UX Transparency | ✅ 用户可查看进度 | ✅ 通过 |
 | Epic 4: GitHub Authorization & Repo Linking | ✅ 用户可绑定仓库 | ✅ 通过 |
 | Epic 5: AI API Key Setup & Validation | ✅ 用户可配置 AI | ✅ 通过 |

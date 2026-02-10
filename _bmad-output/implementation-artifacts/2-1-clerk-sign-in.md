@@ -24,7 +24,7 @@ so that 我可以开始使用平台功能。
   - [x] 同步新增注册页路由并渲染 `<SignUp />`（避免 Clerk UI 内跳转 404）
   - [x] 统一外观/样式兼容配置（Tailwind CSS 4：`cssLayerName`，见下方"Implementation Hints"）
 - [x] 实现受保护落地页与用户信息展示（AC: 1）
-  - [x] 登录成功后进入受保护页面（如项目列表/首页）
+  - [x] 登录成功后进入受保护页面（如工作空间列表/首页）
   - [x] 在受保护布局中展示用户头像与用户名（优先使用 `<UserButton />`）
 - [x] 配置路由保护中间件（AC: 1）
   - [x] 使用 `clerkMiddleware` + `createRouteMatcher` 定义 public routes 与 protected routes
