@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface ProvidersProps {
  * 包含：
  * - ClerkProvider：身份认证
  * - QueryClientProvider：TanStack Query 状态管理
+ * - Toaster：全局 Toast 通知（Sonner）
  */
 export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(
@@ -34,7 +36,10 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <ClerkProvider afterSignOutUrl="/sign-in" appearance={{ cssLayerName: "clerk" }}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster />
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }
