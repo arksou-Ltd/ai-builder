@@ -79,7 +79,7 @@ templateFile: '../templates/[template].md'
 ### 2. Init (Continuable)
 **Use:** Multi-session workflow
 
-**Frontmatter:** Add `continueFile: './step-01b-continue.md'`
+**Frontmatter:** Add `continueFile: './step-01b-continue.md'` <!-- validate-file-refs:ignore -->
 
 **Logic:**
 ```markdown
