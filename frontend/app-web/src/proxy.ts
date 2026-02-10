@@ -54,7 +54,16 @@ export default clerkMiddleware(async (auth, request) => {
   if (isApiRoute(request)) {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        {
+          code: { value: 4010000, desc: "unauthorized" },
+          data: null,
+          message: "Unauthorized",
+          request_id: crypto.randomUUID(),
+          timestamp: Date.now(),
+        },
+        { status: 401 }
+      );
     }
     return NextResponse.next();
   }

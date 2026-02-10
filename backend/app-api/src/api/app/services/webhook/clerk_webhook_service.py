@@ -52,11 +52,17 @@ class ClerkWebhookService:
         self._verifier.verify(body, headers)
 
         # 记录原始请求数据（调试用）
+        safe_headers = {
+            "svix-id": headers.get("svix-id", ""),
+            "svix-timestamp": headers.get("svix-timestamp", ""),
+            "svix-signature": "[REDACTED]"
+            if headers.get("svix-signature")
+            else "",
+        }
         logger.debug(
             "Clerk webhook 原始请求",
             body_size=len(body),
-            body_preview=body[:500].decode("utf-8", errors="replace"),
-            headers=headers,
+            headers=safe_headers,
         )
 
         # 解析事件（防御空 body / 非 JSON / null 等异常情况）

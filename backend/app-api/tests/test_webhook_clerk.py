@@ -17,6 +17,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import pytest_asyncio
+import jwt
 from httpx import ASGITransport, AsyncClient
 from redis.asyncio import Redis
 from svix.webhooks import Webhook
@@ -171,6 +172,22 @@ def _session_removed_payload(
             "user_id": user_id,
         },
     }
+
+
+def _build_revoked_session_jwt(
+    session_id: str,
+    user_id: str = "user_revoked_check",
+) -> str:
+    """构造带 sid 的过期前 JWT（不校验签名，仅用于撤销校验链路测试）。"""
+    now = int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())
+    payload = {
+        "sub": user_id,
+        "sid": session_id,
+        "iss": "https://clerk.invalid",
+        "iat": now,
+        "exp": now + 300,
+    }
+    return jwt.encode(payload, "dev-secret", algorithm="HS256")
 
 
 class TestD1SvixSignatureVerification:
@@ -416,6 +433,68 @@ class TestD4IdempotentEventProcessing:
         # TTL 仍然有效（被重置）
         ttl = await redis_client.ttl(keys[0])
         assert ttl > 0, "撤销键 TTL 应仍然有效"
+
+
+class TestD4RevokedSessionAccessBlocked:
+    """D4. 撤销会话后访问受保护资源应被拒绝。"""
+
+    async def test_revoked_sid_cannot_access_protected_api(
+        self,
+        client: AsyncClient,
+        redis_client: Redis,
+        monkeypatch,
+    ) -> None:
+        """session.removed 撤销后，携带同 sid 的请求应返回 401。"""
+        session_id = "sess_d4_revoke_block"
+        payload = _session_removed_payload(session_id=session_id)
+        body, headers = _build_signed_request(payload)
+
+        revoke_response = await client.post(
+            "/api/v1/webhooks/clerk",
+            content=body,
+            headers=headers,
+        )
+        assert revoke_response.status_code == 200
+        assert revoke_response.json()["code"]["value"] == 2000000
+
+        keys: list[str] = []
+        async for key in redis_client.scan_iter(match=f"*session*{session_id}*"):
+            keys.append(key)
+        assert len(keys) > 0, "撤销键应存在"
+
+        from arksou.kernel.framework.auth.jwks import JWKSClient
+
+        def _raise_if_called(*_: object, **__: object) -> None:
+            raise RuntimeError("jwks should not be called in revoked-sid test")
+
+        monkeypatch.setattr(
+            JWKSClient,
+            "get_signing_key",
+            _raise_if_called,
+        )
+
+        from arksou.kernel.framework.auth.clerk import (
+            dependencies as clerk_dependencies,
+        )
+
+        monkeypatch.setattr(
+            clerk_dependencies,
+            "verify_jwks_token",
+            lambda _token, _config: {
+                "sub": "user_revoked_check",
+                "sid": session_id,
+            },
+        )
+
+        revoked_token = _build_revoked_session_jwt(session_id)
+        protected_response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {revoked_token}"},
+        )
+
+        assert protected_response.status_code == 401
+        protected_data = protected_response.json()
+        assert protected_data["code"]["value"] == 4010000
 
 
 class TestD5BodyParsingEdgeCases:
