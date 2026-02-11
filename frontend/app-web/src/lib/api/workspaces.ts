@@ -43,3 +43,17 @@ export async function listWorkspaces(
     getToken,
   );
 }
+
+/**
+ * 删除工作空间（软删除）
+ */
+export async function deleteWorkspace(
+  id: number,
+  getToken: () => Promise<string | null>,
+): Promise<void> {
+  await apiRequest<null>(
+    `/api/v1/workspaces/${id}`,
+    { method: "DELETE" },
+    getToken,
+  );
+}

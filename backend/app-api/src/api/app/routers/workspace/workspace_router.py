@@ -1,6 +1,7 @@
 """工作空间 API 端点。
 
-提供工作空间创建和列表查询功能。
+提供工作空间创建、列表查询和删除功能。
+Router 层显式通过 AccountService 解析内部 account，再调用 WorkspaceService。
 """
 
 from arksou.kernel.framework.base import Result
@@ -9,6 +10,7 @@ from fastapi import APIRouter
 from api.app.deps.auth import CurrentClerkAccount
 from api.app.deps.database import DbSession
 from api.app.schemas.workspace.workspace_schema import WorkspaceCreate, WorkspaceResponse
+from api.app.services.account.account_service import AccountService
 from api.app.services.workspace.workspace_service import WorkspaceService
 
 router = APIRouter()
@@ -24,18 +26,14 @@ async def create_workspace(
     account: CurrentClerkAccount,
     db: DbSession,
 ) -> Result[WorkspaceResponse]:
-    """创建工作空间。
+    """创建工作空间。"""
+    account_service = AccountService(db)
+    internal_account_id = await account_service.resolve_or_create_by_clerk_id(
+        account.clerk_account_id, account.email
+    )
 
-    Args:
-        payload: 工作空间创建请求
-        account: 当前认证用户（自动注入）
-        db: 数据库会话（自动注入）
-
-    Returns:
-        Result[WorkspaceResponse]: 新创建的工作空间
-    """
     service = WorkspaceService(db)
-    workspace = await service.create_workspace(account.clerk_account_id, payload)
+    workspace = await service.create_workspace(internal_account_id, payload)
     return Result.success(data=workspace)
 
 
@@ -48,15 +46,33 @@ async def list_workspaces(
     account: CurrentClerkAccount,
     db: DbSession,
 ) -> Result[list[WorkspaceResponse]]:
-    """获取当前用户的工作空间列表。
+    """获取当前用户的工作空间列表。"""
+    account_service = AccountService(db)
+    internal_account_id = await account_service.resolve_or_create_by_clerk_id(
+        account.clerk_account_id, account.email
+    )
 
-    Args:
-        account: 当前认证用户（自动注入）
-        db: 数据库会话（自动注入）
-
-    Returns:
-        Result[list[WorkspaceResponse]]: 工作空间列表
-    """
     service = WorkspaceService(db)
-    workspaces = await service.list_workspaces(account.clerk_account_id)
+    workspaces = await service.list_workspaces(internal_account_id)
     return Result.success(data=workspaces)
+
+
+@router.delete(
+    "/{workspace_id}",
+    summary="删除工作空间",
+    description="软删除指定工作空间。仅工作空间所有者可执行删除。",
+)
+async def delete_workspace(
+    workspace_id: int,
+    account: CurrentClerkAccount,
+    db: DbSession,
+) -> Result[None]:
+    """删除工作空间（软删除）。"""
+    account_service = AccountService(db)
+    internal_account_id = await account_service.resolve_or_create_by_clerk_id(
+        account.clerk_account_id, account.email
+    )
+
+    service = WorkspaceService(db)
+    await service.delete_workspace(workspace_id, internal_account_id)
+    return Result.success(message="工作空间已删除")

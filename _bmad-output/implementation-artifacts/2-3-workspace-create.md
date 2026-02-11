@@ -51,9 +51,9 @@ so that 我可以在该工作空间中继续管理需求与仓库。
   - [x] 在 `common-kernel` 新增工作空间模型：`models/workspace/workspace.py`
   - [x] 模型类 `Workspace` 继承 `SnowflakeAuditableBase`（框架默认首选基类，含 `id` + `created_at` + `updated_at` + `created_by` + `updated_by`）
   - [x] 表名 `workspace_workspaces`（遵循 `{module}_{entity}` 命名规范）
-  - [x] 字段：`name: Mapped[str]` (长度 50，可索引)、`owner_clerk_id: Mapped[str]` (Clerk 外部用户标识)
-  - [x] `owner_clerk_id` 值来源：`ClerkAccount.clerk_account_id`（当前 Account 实体未持久化，先用 Clerk ID 隔离，后续迁移为内部 `account_id`）
-  - [x] 复合唯一约束：`UniqueConstraint("owner_clerk_id", "name", name="uq_workspace_owner_name")`
+  - [x] 字段：`name: Mapped[str]`（长度 50，可索引）、`account_id: Mapped[int]`（内部账号主键，关联 `auth_accounts.id`）
+  - [x] `account_id` 来源：`CurrentClerkAccount` 先解析为内部 `Account` 实体，再写入工作空间
+  - [x] 唯一约束口径：同一 `account_id` 下工作空间名唯一（删除能力落地后由“未删除记录唯一”规则承接）
   - [x] 在 `models/workspace/__init__.py` 导出 `Workspace`，并在 `models/__init__.py` 重新导出：
     ```python
     # models/workspace/__init__.py
@@ -65,7 +65,7 @@ so that 我可以在该工作空间中继续管理需求与仓库。
     __all__ = ["Workspace"]
     ```
   - [x] 保持模型与命名符合既有 snake_case 与模块分层规范
-  - [x] **注意**：`SnowflakeAuditableBase` 自带的 `created_by`/`updated_by` 字段用于审计追踪（记录"谁操作"），与 `owner_clerk_id` 不冲突 — `owner_clerk_id` 是业务级数据隔离主键（决定"谁拥有"）。`created_by`/`updated_by` 可为 nullable，由框架中间件或 Service 层按需填充
+  - [x] **注意**：`SnowflakeAuditableBase` 自带的 `created_by`/`updated_by` 字段用于审计追踪（记录“谁操作”），与 `account_id` 不冲突；`account_id` 是业务级归属主键（决定“谁拥有”）。`created_by`/`updated_by` 由框架或 Service 层按需填充
 
 - [x] A2. 实现工作空间创建与列表接口（AC: 1, 2, 3, 4）
   - [x] 新增 `POST /api/v1/workspaces`：创建工作空间
@@ -145,7 +145,7 @@ so that 我可以在该工作空间中继续管理需求与仓库。
 ### C. Data Isolation & Consistency
 
 - [x] C1. 强制用户数据隔离（AC: 3）
-  - [x] Service/Repository 查询默认按 `owner_clerk_id` 过滤
+  - [x] Service/Repository 查询默认按内部 `account_id` 过滤
   - [x] 禁止在 Router 层直接拼接 SQL 或绕过 Service/Repository
 
 - [x] C2. 命名与结构一致性（AC: 4）
@@ -165,7 +165,7 @@ so that 我可以在该工作空间中继续管理需求与仓库。
   # 1) 从 .env 的 DB_* 构建真实 PostgreSQL URL
   # 2) 使用 NullPool 创建 AsyncEngine，避免 ASGITransport 下连接复用冲突
   # 3) override get_db，保持与框架一致的 commit/rollback 语义
-  # 4) 认证身份通过 ClerkAccount 实例注入，覆盖用户隔离与 401 场景
+  # 4) 认证身份通过 ClerkAccount 注入，并在服务层解析为内部 Account 主键，覆盖隔离与 401 场景
   # 5) 测试后清理 account_id like 'user_test_%' 的测试数据
   ```
 
@@ -222,7 +222,7 @@ so that 我可以在该工作空间中继续管理需求与仓库。
 - 错误语义要稳定：校验失败 `422`、未登录 `401`、重名冲突 `409`。
 - **框架异常自动映射 HTTP 状态码**：`ConflictException` → `409`、`NotFoundException` → `404`、`InvalidParamsException` → `422`，无需手动设置 `status_code`。
 - **DbSession 注入**：Router 函数参数直接声明 `db: DbSession`，框架自动管理会话生命周期。
-- **owner_clerk_id 来源**：`CurrentClerkAccount` → `account.clerk_account_id`（字段名为 `clerk_account_id`，不是 `id`）。
+- **account_id 来源**：`CurrentClerkAccount` 仅用于认证身份，业务层必须解析到内部 `auth_accounts.id` 后再做隔离读写。
 - **CORS 已就绪**：`BaseAppSettings` 默认 `cors_origins = ["http://localhost:3000"]`，前端开发服务器端口 3000，无需额外 CORS 配置。
 
 ## Dev Agent Guardrails: Technical Requirements
@@ -242,7 +242,7 @@ so that 我可以在该工作空间中继续管理需求与仓库。
 | Check Item | Requirement |
 | --- | --- |
 | Layering | Router 仅做编排，业务在 Service，数据访问在 Repository |
-| Isolation | 查询与写入默认绑定当前用户（`owner_clerk_id` 维度） |
+| Isolation | 查询与写入默认绑定当前用户（内部 `account_id` 维度） |
 | Naming | 遵循 snake_case、模块化目录、复数目录规范 |
 | Reuse First | 复用 `create_clerk_deps`、`Result`、框架异常，不重复造轮子 |
 | Migration | Alembic 管理所有 DDL 变更，禁止手动执行 SQL 建表 |
@@ -373,7 +373,7 @@ so that 我可以在该工作空间中继续管理需求与仓库。
 ### Workspace Structure Notes
 
 - 本 Story 与现有结构对齐：前端在 `dashboard` 扩展，后端新增 `workspace` 模块分层目录。
-- 架构文档中的 `account_id` 隔离原则在当前仓库尚未完整落地，本 Story 先以 `owner_clerk_id`（= `ClerkAccount.clerk_account_id`）强制隔离，并在后续账户实体持久化后平滑迁移。
+- 说明：本 Story 历史实现中存在“外部 Clerk ID 直接入库”的过渡语义；该语义已在 Story 2.4 方案中被正式替换为“`auth_accounts` 持久化 + `workspace.account_id` 外键”。
 
 ### References
 
@@ -403,7 +403,7 @@ Claude Opus 4.6
 
 - 2026-02-10: create-story workflow 生成 Story 2.3 上下文与开发护栏
 - 2026-02-10: validate-create-story 质量验证 — 发现 4 项关键缺失、5 项增强、3 项优化
-- 2026-02-10: 应用全部改进：Alembic 初始化(C1)、前端 API 基础设施(C2)、SnowflakeAuditableBase 明确(C3)、testcontainers 测试策略(C4)、空状态 UX 细节(E1)、类名文件名明确(E2)、owner_clerk_id 映射(E3)、Dashboard 改造策略(E4)、路由注册代码(E5)、精简 Tech Info(O1)、测试 fixture 经验(O2)、框架实用提示(O3)
+- 2026-02-10: 应用全部改进：Alembic 初始化(C1)、前端 API 基础设施(C2)、SnowflakeAuditableBase 明确(C3)、testcontainers 测试策略(C4)、空状态 UX 细节(E1)、类名文件名明确(E2)、账号归属映射(E3)、Dashboard 改造策略(E4)、路由注册代码(E5)、精简 Tech Info(O1)、测试 fixture 经验(O2)、框架实用提示(O3)
 - 2026-02-10: 整合 UI/UX Pro Max 设计系统规范（Minimalism 风格、shadcn 组件规范、可访问性清单、交互设计规范）
 - 2026-02-10: 二次 validate-create-story（代码库实态交叉比对）— 发现并应用 13 项改进：
   - C1: 补齐前端依赖安装步骤（shadcn/ui 组件 + react-hook-form + zod + @hookform/resolvers）
@@ -412,7 +412,7 @@ Claude Opus 4.6
   - C4: 补齐 testcontainers + pytest-asyncio 开发依赖声明
   - C5: 提供完整 conftest.py fixture 模板（容器、引擎、会话、双用户身份、应用、客户端）
   - E1: 明确 Alembic env.py 的 metadata 导入路径和 Model 注册方式
-  - E2: 说明 created_by/updated_by（审计）与 owner_clerk_id（隔离）的职责区分
+  - E2: 说明 created_by/updated_by（审计）与 account_id（隔离）的职责区分
   - E3: 明确 API 客户端 Client-side 专用策略和 token 获取方式差异
   - E4: 提供 models/__init__.py 导出代码示例
   - E5: 标注 PerformanceMarker 对 data-testid 的依赖关系
@@ -442,6 +442,7 @@ Claude Opus 4.6
   - [MEDIUM] File List 更新：补充 `package-lock.json` 和新增迁移文件
   - [LOW] WorkspaceCard 语义修复：移除 `role="button"` / `tabIndex={0}` / `cursor-pointer`（后续 Story 实现点击导航时再添加）
   - 全部 16 个后端集成测试通过，前端 lint 通过
+- 2026-02-11: 架构语义更新（文档对齐）— 本文中历史“`owner_clerk_id` 过渡口径”已标记为被 Story 2.4 的账号域重构方案取代
 
 ## Senior Developer Review (AI)
 

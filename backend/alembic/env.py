@@ -17,6 +17,7 @@ from alembic import context
 from arksou.kernel.framework.rdbms import SnowflakeAuditableBase
 
 # 必须导入所有模型，否则 autogenerate 检测不到表
+from kernel.common.models.auth import Account  # noqa: F401
 from kernel.common.models.workspace import Workspace  # noqa: F401
 
 config = context.config

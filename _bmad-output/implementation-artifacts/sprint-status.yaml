@@ -52,5 +52,5 @@ development_status:
   2-1-clerk-sign-in: done
   2-2-sign-out: done
   2-3-workspace-create: done
-  2-4-workspace-delete: backlog
+  2-4-workspace-delete: review
   epic-2-retrospective: optional

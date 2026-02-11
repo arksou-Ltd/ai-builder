@@ -9,16 +9,22 @@
  */
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { AlertCircle, Plus, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { WorkspaceEmptyState } from "./WorkspaceEmptyState";
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
-import { listWorkspaces } from "@/lib/api/workspaces";
+import { DeleteWorkspaceDialog } from "./DeleteWorkspaceDialog";
+import {
+  deleteWorkspace,
+  listWorkspaces,
+  type WorkspaceResponse,
+} from "@/lib/api/workspaces";
 
 export function WorkspaceList() {
   const { getToken } = useAuth();
@@ -26,15 +32,64 @@ export function WorkspaceList() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // 删除相关状态
+  const [deleteTarget, setDeleteTarget] = useState<WorkspaceResponse | null>(null);
+
+  const queryKey = ["workspaces", user?.id];
+
   const { data: workspaces, isLoading, isError, refetch } = useQuery({
-    queryKey: ["workspaces", user?.id],
+    queryKey,
     queryFn: () => listWorkspaces(getToken),
     enabled: !!user?.id,
   });
 
+  // 删除 mutation：乐观更新 + 失败回滚
+  const deleteMutation = useMutation({
+    mutationFn: (workspaceId: number) => deleteWorkspace(workspaceId, getToken),
+    onMutate: async (workspaceId: number) => {
+      // 取消正在进行的查询，避免覆盖乐观更新
+      await queryClient.cancelQueries({ queryKey });
+
+      // 快照当前数据用于失败回滚
+      const previousWorkspaces = queryClient.getQueryData<WorkspaceResponse[]>(queryKey);
+
+      // 乐观移除
+      queryClient.setQueryData<WorkspaceResponse[]>(queryKey, (prev) =>
+        prev?.filter((ws) => ws.id !== workspaceId) ?? [],
+      );
+
+      return { previousWorkspaces };
+    },
+    onError: (_error, _workspaceId, context) => {
+      // 失败回滚
+      if (context?.previousWorkspaces) {
+        queryClient.setQueryData(queryKey, context.previousWorkspaces);
+      }
+      toast.error("删除失败，请稍后重试");
+    },
+    onSuccess: () => {
+      toast.success("工作空间已删除");
+    },
+    onSettled: () => {
+      // 无论成败，最终与服务器同步
+      queryClient.invalidateQueries({ queryKey });
+      setDeleteTarget(null);
+    },
+  });
+
+  function handleDeleteClick(workspace: WorkspaceResponse) {
+    setDeleteTarget(workspace);
+  }
+
+  function handleDeleteConfirm() {
+    if (deleteTarget) {
+      deleteMutation.mutate(deleteTarget.id);
+    }
+  }
+
   function handleCreateOptimistic(createdWorkspace: { id: number; name: string; createdAt: string; updatedAt: string }) {
     queryClient.setQueryData(
-      ["workspaces", user?.id],
+      queryKey,
       (prev: { id: number; name: string; createdAt: string; updatedAt: string }[] | undefined) => {
         if (!prev) {
           return [createdWorkspace];
@@ -48,7 +103,7 @@ export function WorkspaceList() {
   }
 
   function handleCreateSuccess() {
-    queryClient.invalidateQueries({ queryKey: ["workspaces", user?.id] });
+    queryClient.invalidateQueries({ queryKey });
   }
 
   // 加载态：3 张骨架卡片
@@ -118,7 +173,11 @@ export function WorkspaceList() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {workspaces.map((ws) => (
-            <WorkspaceCard key={ws.id} workspace={ws} />
+            <WorkspaceCard
+              key={ws.id}
+              workspace={ws}
+              onDeleteClick={handleDeleteClick}
+            />
           ))}
         </div>
       )}
@@ -130,6 +189,18 @@ export function WorkspaceList() {
         onOptimisticCreate={handleCreateOptimistic}
         getToken={getToken}
       />
+
+      {deleteTarget && (
+        <DeleteWorkspaceDialog
+          workspaceName={deleteTarget.name}
+          open={!!deleteTarget}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+          onConfirm={handleDeleteConfirm}
+          isPending={deleteMutation.isPending}
+        />
+      )}
     </div>
   );
 }
