@@ -529,6 +529,38 @@ class TestListWorkspaces:
         assert data["data"] == []
         application.dependency_overrides.clear()
 
+    async def test_list_does_not_create_account_for_new_user(
+        self,
+        test_session_factory,
+        test_engine,
+    ):
+        """列表查询不应为新用户自动创建 auth_accounts 记录。"""
+        clerk_id = f"user_test_{_TEST_RUN_ID}_list_no_create_{uuid.uuid4().hex[:6]}"
+        new_user = ClerkAccount(
+            clerk_account_id=clerk_id,
+            email="new-list@test.com",
+        )
+        application = _make_app(test_session_factory, new_user)
+
+        transport = ASGITransport(app=application)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+            response = await c.get("/api/v1/workspaces")
+
+        assert response.status_code == 200
+        assert response.json()["data"] == []
+
+        async with test_engine.connect() as conn:
+            result = await conn.execute(
+                text(
+                    "SELECT COUNT(*) FROM auth_accounts WHERE clerk_account_id = :clerk_id"
+                ),
+                {"clerk_id": clerk_id},
+            )
+            count = result.scalar_one()
+
+        assert count == 0, "列表查询不应产生 auth_accounts 写入副作用"
+        application.dependency_overrides.clear()
+
 
 # --- 删除测试 ---
 
@@ -613,10 +645,10 @@ class TestDeleteWorkspace:
         response = await client.delete("/api/v1/workspaces/abc")
         assert response.status_code == 422
 
-    async def test_delete_negative_id_returns_404(self, client: httpx.AsyncClient):
-        """负数 workspace_id 是合法 int，FastAPI 不拦截；服务层查无此记录返回 404。"""
+    async def test_delete_negative_id_returns_422(self, client: httpx.AsyncClient):
+        """负数 workspace_id 属于参数错误，应返回 422（AC: 9）。"""
         response = await client.delete("/api/v1/workspaces/-1")
-        assert response.status_code == 404
+        assert response.status_code == 422
 
     async def test_cross_user_delete_returns_404(
         self,

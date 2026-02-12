@@ -129,11 +129,11 @@ so that 我的工作空间列表保持整洁，并且系统数据模型保持一
   - [x] 覆盖软删除后同名重建成功。
   - [x] 覆盖跨用户删除 `404`、未登录 `401`、参数异常 `422`。
 
-- [x] D2. 前端验收（AC: 1-3, 10）
+- [x] D2. 前端验收（AC: 1-3）
   - [x] 验证确认框展示目标名称。
   - [x] 验证确认后列表即时移除。
   - [x] 验证取消不触发请求。
-  - [x] 验证失败可恢复且不出现脏状态。
+  - [ ] 验证失败可恢复且不出现脏状态（No Mock 约束下未执行自动化，采用代码审查证据覆盖）。
 
 ### Review Follow-ups (AI)
 
@@ -151,6 +151,12 @@ so that 我的工作空间列表保持整洁，并且系统数据模型保持一
 - [x] [Review-R2][Medium] AC2 断言超时从 3000ms 收紧为 1000ms，严格验证"1 秒内移除"AC 要求 [frontend/app-web/e2e/workspace-delete.spec.ts:122]
 - [x] [Review-R2][Medium] `-1` 参数测试断言从 `in (404, 422)` 收紧为 `== 404`（负数是合法 int，FastAPI 不拦截，服务层查无记录返回 404）[backend/app-api/tests/test_workspace.py:549]
 - [x] [Review-R2][Low] 移除 `workspace-delete.spec.ts` 中未使用的 `createButton` 变量 [frontend/app-web/e2e/workspace-delete.spec.ts:28]
+- [x] [Review-R3][High] 将删除接口 `workspace_id` 参数收紧为正整数（`gt=0`），使参数错误统一返回 `422` 以满足 AC9 [backend/app-api/src/api/app/routers/workspace/workspace_router.py:66]
+- [x] [Review-R3][High] 修正 `-1` 删除用例断言为 `422`，与 AC9 参数错误契约保持一致 [backend/app-api/tests/test_workspace.py:579]
+- [x] [Review-R3][High] 修复已标记完成但未自动化验证的 AC10 任务描述，明确 No Mock 约束下采用代码审查证据闭合，避免假阳性勾选 [_bmad-output/implementation-artifacts/2-4-workspace-delete.md:132]
+- [x] [Review-R3][Medium] 移除列表查询的隐式写副作用：`GET /workspaces` 改为仅解析账号，不存在时返回空列表 [backend/app-api/src/api/app/routers/workspace/workspace_router.py:50]
+- [x] [Review-R3][Medium] 新增回归测试，验证新用户列表查询不会创建 `auth_accounts` 记录 [backend/app-api/tests/test_workspace.py:463]
+- [x] [Review-R3][Low] 对齐迁移脚本与框架基类约束：`created_by/updated_by` 改为 `nullable=False`，减少 schema 漂移风险 [backend/alembic/versions/b3c4d5e6f7a8_rebuild_auth_and_workspace_schema.py:50]
 
 **第三轮 Review (2026-02-12):**
 
@@ -305,7 +311,7 @@ Claude Opus 4.6
 - 2026-02-11: 完成全部 Review Follow-ups 修复（6/6），后端 31 项集成测试全部通过，前端 TypeScript 编译 + Next.js 构建通过。
 - 2026-02-11: 完成第二轮 Review 修复（5/5）：移除 E2E setup 依赖、删除违反 No Mock 的 AC10 测试、收紧 AC2 超时验证、修正 -1 断言、清理未用变量。
 - 2026-02-12: 完成第三轮 Review 修复（5/5）：补 AC10 离线失败回滚 E2E、移除 GET 写副作用、修复迁移回滚约束一致性、测试库改为 TEST_DATABASE_URL/testcontainers、同步文档状态。
-- 2026-02-12: 完成第四轮 Review 修复（3/3）：修复迁移审计字段可空回归、补齐 AC10 “失败后重试成功”验收、为取消类 E2E 场景补充清理删除。
+- 2026-02-12: 完成第四轮 Review 修复（3/3）：修复迁移审计字段可空回归、补齐 AC10 "失败后重试成功"验收、为取消类 E2E 场景补充清理删除。
 
 ### File List
 
@@ -320,6 +326,8 @@ Claude Opus 4.6
 - `backend/common-kernel/src/kernel/common/models/__init__.py`
 - `backend/common-kernel/src/kernel/common/models/workspace/workspace.py`
 - `backend/alembic/env.py`
+- `backend/alembic/versions/b3c4d5e6f7a8_rebuild_auth_and_workspace_schema.py`
+- `backend/app-api/src/api/app/services/account/account_service.py`
 - `backend/app-api/src/api/app/services/workspace/workspace_service.py`
 - `backend/app-api/src/api/app/routers/workspace/workspace_router.py`
 - `backend/app-api/tests/test_workspace.py`
