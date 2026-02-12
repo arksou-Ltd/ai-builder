@@ -214,6 +214,18 @@ app = create_app(
 )
 ```
 
+**Environment Startup Standard**:
+- 统一使用 `.env` 文件启动后端，避免环境变量缺失导致配置回退到默认值（如 Redis 指向 `localhost`）。
+- 统一命令（推荐）:
+```bash
+backend/.venv/bin/python -m uvicorn api.app.main:app \
+  --host 0.0.0.0 --port 8000 \
+  --app-dir backend/app-api/src \
+  --env-file backend/.env
+```
+- 禁止使用 `source backend/.env` 直接导入后再启动，避免 `CORS_ORIGINS` 等 JSON 字段被 shell 解析破坏。
+- 前端本地开发保持使用 `frontend/app-web/.env.local`（`npm -C frontend/app-web run dev`）。
+
 **Config** (`core/config.py`):
 `Settings(BaseAppSettings)` 增量声明 `database_*` 字段 + `computed_field database_url`。
 `ClerkSettings` 独立实例: `clerk_settings = ClerkSettings()`。

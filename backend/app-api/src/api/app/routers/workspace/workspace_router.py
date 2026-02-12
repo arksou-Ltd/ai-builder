@@ -4,7 +4,7 @@
 Router 层显式通过 AccountService 解析内部 account，再调用 WorkspaceService。
 """
 
-from arksou.kernel.framework.base import Result
+from arksou.kernel.framework.base import NotFoundException, Result
 from fastapi import APIRouter
 
 from api.app.deps.auth import CurrentClerkAccount
@@ -48,9 +48,12 @@ async def list_workspaces(
 ) -> Result[list[WorkspaceResponse]]:
     """获取当前用户的工作空间列表。"""
     account_service = AccountService(db)
-    internal_account_id = await account_service.resolve_or_create_by_clerk_id(
-        account.clerk_account_id, account.email
+    internal_account_id = await account_service.resolve_by_clerk_id(
+        account.clerk_account_id
     )
+    if internal_account_id is None:
+        # 新用户尚未建立内部账号时，列表语义应为“空列表”，避免 GET 产生写副作用
+        return Result.success(data=[])
 
     service = WorkspaceService(db)
     workspaces = await service.list_workspaces(internal_account_id)
@@ -69,9 +72,12 @@ async def delete_workspace(
 ) -> Result[None]:
     """删除工作空间（软删除）。"""
     account_service = AccountService(db)
-    internal_account_id = await account_service.resolve_or_create_by_clerk_id(
-        account.clerk_account_id, account.email
+    internal_account_id = await account_service.resolve_by_clerk_id(
+        account.clerk_account_id
     )
+    if internal_account_id is None:
+        # 当前用户不存在内部账号视为查无资源，不泄露任何存在性信息
+        raise NotFoundException("工作空间不存在")
 
     service = WorkspaceService(db)
     await service.delete_workspace(workspace_id, internal_account_id)

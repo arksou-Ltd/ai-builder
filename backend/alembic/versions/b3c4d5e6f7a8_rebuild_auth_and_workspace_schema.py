@@ -47,8 +47,8 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.Column("created_by", sa.BigInteger(), nullable=True),
-        sa.Column("updated_by", sa.BigInteger(), nullable=True),
+        sa.Column("created_by", sa.BigInteger(), nullable=False),
+        sa.Column("updated_by", sa.BigInteger(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
@@ -94,8 +94,8 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.Column("created_by", sa.BigInteger(), nullable=True),
-        sa.Column("updated_by", sa.BigInteger(), nullable=True),
+        sa.Column("created_by", sa.BigInteger(), nullable=False),
+        sa.Column("updated_by", sa.BigInteger(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_workspace_workspaces_name", "workspace_workspaces", ["name"])
@@ -137,8 +137,8 @@ def downgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.Column("created_by", sa.BigInteger(), nullable=True),
-        sa.Column("updated_by", sa.BigInteger(), nullable=True),
+        sa.Column("created_by", sa.BigInteger(), nullable=False),
+        sa.Column("updated_by", sa.BigInteger(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_unique_constraint(

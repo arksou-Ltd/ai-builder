@@ -25,6 +25,26 @@ class AccountService:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
+    async def resolve_by_clerk_id(self, clerk_account_id: str) -> int | None:
+        """仅解析内部账号，不做创建。
+
+        适用于只读接口，避免 GET 请求产生写副作用。
+
+        Args:
+            clerk_account_id: Clerk 外部身份标识
+
+        Returns:
+            int | None: 解析到的内部账号 ID；不存在则返回 None
+        """
+        stmt = select(Account).where(
+            Account.clerk_account_id == clerk_account_id
+        )
+        result = await self._db.execute(stmt)
+        account = result.scalar_one_or_none()
+        if account is None:
+            return None
+        return account.id
+
     async def resolve_or_create_by_clerk_id(
         self, clerk_account_id: str, email: str | None = None
     ) -> int:
@@ -41,14 +61,9 @@ class AccountService:
             int: 内部账号 ID（auth_accounts.id 雪花主键）
         """
         # 1. 尝试查询已有账号
-        stmt = select(Account).where(
-            Account.clerk_account_id == clerk_account_id
-        )
-        result = await self._db.execute(stmt)
-        account = result.scalar_one_or_none()
-
-        if account is not None:
-            return account.id
+        internal_account_id = await self.resolve_by_clerk_id(clerk_account_id)
+        if internal_account_id is not None:
+            return internal_account_id
 
         # 2. 不存在则创建
         new_account = Account(
@@ -66,10 +81,9 @@ class AccountService:
                 "account_concurrent_create_fallback",
                 clerk_account_id=clerk_account_id,
             )
-            result = await self._db.execute(stmt)
-            account = result.scalar_one_or_none()
-            if account is not None:
-                return account.id
+            internal_account_id = await self.resolve_by_clerk_id(clerk_account_id)
+            if internal_account_id is not None:
+                return internal_account_id
             # 极端情况：仍然查不到，向上抛异常
             raise  # noqa: TRY201
 

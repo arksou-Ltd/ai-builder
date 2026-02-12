@@ -2,13 +2,13 @@
 
 覆盖创建成功、重名失败、非法名称失败、未登录 401、跨用户隔离、
 软删除、删除后不可见、删除后同名重建、跨用户删除拦截。
-使用 .env 中配置的真实 PostgreSQL 实例，严禁 mock/stub/fake。
+使用真实 PostgreSQL（TEST_DATABASE_URL 或 testcontainers），严禁 mock/stub/fake。
 使用 NullPool 避免 ASGITransport 下连接池复用冲突。
 """
 
 import os
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from typing import Final
 
 import pytest
@@ -31,7 +31,7 @@ from api.app.deps.database import get_db
 _TEST_RUN_ID: Final[str] = uuid.uuid4().hex[:8]
 
 
-def _build_db_url() -> str:
+def _build_db_url_from_env() -> str:
     """从环境变量构建数据库连接 URL（与 .env 配置一致）。"""
     driver = os.getenv("DB_DRIVER", "postgresql+asyncpg")
     host = os.getenv("DB_HOST", "localhost")
@@ -42,13 +42,82 @@ def _build_db_url() -> str:
     return f"{driver}://{username}:{password}@{host}:{port}/{database}"
 
 
+def _to_asyncpg_url(url: str) -> str:
+    """将 PostgreSQL URL 规范为 asyncpg 驱动。"""
+    if url.startswith("postgresql+asyncpg://"):
+        return url
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    return url
+
+
 # --- Fixtures ---
 
 
 @pytest.fixture(scope="session")
-def test_engine():
+def test_db_url() -> Generator[str, None, None]:
+    """提供可复现的测试数据库连接。
+
+    优先级：
+    1. `TEST_DATABASE_URL`（显式指定）
+    2. `USE_EXISTING_TEST_DB=1` 时使用现有 DB_* 配置
+    3. 自动启动 testcontainers PostgreSQL（推荐默认）
+    """
+    explicit_url = os.getenv("TEST_DATABASE_URL")
+    if explicit_url:
+        yield _to_asyncpg_url(explicit_url)
+        return
+
+    use_existing_db = os.getenv("USE_EXISTING_TEST_DB", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    if use_existing_db:
+        yield _to_asyncpg_url(_build_db_url_from_env())
+        return
+
+    try:
+        from testcontainers.postgres import PostgresContainer
+    except Exception as exc:
+        pytest.skip(
+            "未安装或无法加载 testcontainers，请设置 TEST_DATABASE_URL 后重试。"
+            f" detail={exc!r}"
+        )
+
+    try:
+        container = PostgresContainer(
+            "postgres:16-alpine",
+            username="postgres",
+            password="postgres",
+            dbname="ai_builder_test",
+        )
+    except Exception as exc:
+        pytest.skip(
+            "无法初始化 testcontainers PostgreSQL，请设置 TEST_DATABASE_URL。"
+            f" detail={exc!r}"
+        )
+    try:
+        container.start()
+    except Exception as exc:
+        pytest.skip(
+            "无法启动本地 PostgreSQL 容器，请启动 Docker 或设置 TEST_DATABASE_URL。"
+            f" detail={exc!r}"
+        )
+
+    try:
+        sync_url = container.get_connection_url()
+        yield _to_asyncpg_url(sync_url)
+    finally:
+        container.stop()
+
+
+@pytest.fixture(scope="session")
+def test_engine(test_db_url: str):
     """会话级 NullPool 引擎，避免连接复用冲突。"""
-    engine = create_async_engine(_build_db_url(), poolclass=pool.NullPool)
+    engine = create_async_engine(test_db_url, poolclass=pool.NullPool)
     yield engine
 
 
@@ -649,6 +718,39 @@ class TestAccountWorkspaceRelation:
         workspace_id = resp.json()["data"]["id"]
         assert isinstance(workspace_id, int)
         assert workspace_id > 0
+
+    async def test_list_does_not_create_account_for_new_user(
+        self,
+        test_session_factory,
+        test_engine,
+    ):
+        """GET /workspaces 不应触发账号自动创建（避免读接口写副作用）。"""
+        new_user = ClerkAccount(
+            clerk_account_id=f"user_test_{_TEST_RUN_ID}_list_no_create_{uuid.uuid4().hex[:6]}",
+            email="list-no-create@test.com",
+        )
+        application = _make_app(test_session_factory, new_user)
+
+        transport = ASGITransport(app=application)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+            response = await c.get("/api/v1/workspaces")
+            assert response.status_code == 200
+            assert response.json()["data"] == []
+        application.dependency_overrides.clear()
+
+        async with test_engine.connect() as conn:
+            result = await conn.execute(
+                text(
+                    "SELECT COUNT(1) AS cnt "
+                    "FROM auth_accounts "
+                    "WHERE clerk_account_id = :clerk_account_id"
+                ),
+                {"clerk_account_id": new_user.clerk_account_id},
+            )
+            row = result.fetchone()
+
+        assert row is not None
+        assert row.cnt == 0, "列表查询不应隐式创建 auth_accounts 记录"
 
     async def test_same_clerk_id_resolves_to_same_account(self, client: httpx.AsyncClient):
         """相同 Clerk ID 多次请求应解析到同一内部账号（AC: 5）。"""

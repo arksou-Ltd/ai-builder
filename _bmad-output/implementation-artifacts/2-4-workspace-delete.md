@@ -1,6 +1,6 @@
 # Story 2.4: workspace-delete
 
-Status: review
+Status: done
 
 <!-- Note: This story is intentionally a breaking redesign. -->
 
@@ -152,6 +152,20 @@ so that 我的工作空间列表保持整洁，并且系统数据模型保持一
 - [x] [Review-R2][Medium] `-1` 参数测试断言从 `in (404, 422)` 收紧为 `== 404`（负数是合法 int，FastAPI 不拦截，服务层查无记录返回 404）[backend/app-api/tests/test_workspace.py:549]
 - [x] [Review-R2][Low] 移除 `workspace-delete.spec.ts` 中未使用的 `createButton` 变量 [frontend/app-web/e2e/workspace-delete.spec.ts:28]
 
+**第三轮 Review (2026-02-12):**
+
+- [x] [Review-R3][High] AC10 失败回滚补齐可执行验收：新增“离线网络失败”E2E 场景验证回滚与重试提示 [frontend/app-web/e2e/workspace-delete.spec.ts:128]
+- [x] [Review-R3][High] `GET /api/v1/workspaces` 改为仅解析账号不创建；读接口不再产生写副作用 [backend/app-api/src/api/app/routers/workspace/workspace_router.py:50]
+- [x] [Review-R3][Medium] 修复迁移 `downgrade()` 与历史基线不一致问题：`created_by/updated_by` 回滚为 `NOT NULL` [backend/alembic/versions/b3c4d5e6f7a8_rebuild_auth_and_workspace_schema.py:140]
+- [x] [Review-R3][Medium] 测试数据库策略改为可复现：支持 `TEST_DATABASE_URL`，默认 testcontainers，本地无容器能力时明确 skip [backend/app-api/tests/test_workspace.py:34]
+- [x] [Review-R3][Low] 修正文档状态冲突，补充第三轮修复记录并对齐状态说明 [_bmad-output/implementation-artifacts/2-4-workspace-delete.md:280]
+
+**第四轮 Review (2026-02-12):**
+
+- [x] [Review-R4][High] 修复迁移约束一致性：`upgrade()/downgrade()` 的 `created_by/updated_by` 全部恢复为 `NOT NULL`，与历史基线一致 [backend/alembic/versions/b3c4d5e6f7a8_rebuild_auth_and_workspace_schema.py:97]
+- [x] [Review-R4][High] 补齐 AC10 “可重试”验收：离线失败回滚后恢复在线并重试删除成功 [frontend/app-web/e2e/workspace-delete.spec.ts:164]
+- [x] [Review-R4][Medium] 收敛 E2E 测试数据污染：为取消类场景补充测试内清理删除 [frontend/app-web/e2e/workspace-delete.spec.ts:88]
+
 ## Dev Notes
 
 ### Scope Clarification
@@ -267,9 +281,9 @@ so that 我的工作空间列表保持整洁，并且系统数据模型保持一
 
 ## Story Completion Status
 
-Status: review
+Status: done
 
-Completion Note: 第一轮 Review Follow-ups 修复（6/6）+ 第二轮 Review 修复（5/5）全部完成。后端 31 项测试通过，前端 TypeScript 编译通过。
+Completion Note: 第四轮 Review 的 High/Medium 问题已全部修复，复审通过，故事已达成完成标准。
 
 ## Dev Agent Record
 
@@ -290,6 +304,8 @@ Claude Opus 4.6
 - 2026-02-11: Senior Developer Review（AI）完成，结论为 Changes Requested；已新增 6 条 Review Follow-ups（High 3 / Medium 2 / Low 1）。
 - 2026-02-11: 完成全部 Review Follow-ups 修复（6/6），后端 31 项集成测试全部通过，前端 TypeScript 编译 + Next.js 构建通过。
 - 2026-02-11: 完成第二轮 Review 修复（5/5）：移除 E2E setup 依赖、删除违反 No Mock 的 AC10 测试、收紧 AC2 超时验证、修正 -1 断言、清理未用变量。
+- 2026-02-12: 完成第三轮 Review 修复（5/5）：补 AC10 离线失败回滚 E2E、移除 GET 写副作用、修复迁移回滚约束一致性、测试库改为 TEST_DATABASE_URL/testcontainers、同步文档状态。
+- 2026-02-12: 完成第四轮 Review 修复（3/3）：修复迁移审计字段可空回归、补齐 AC10 “失败后重试成功”验收、为取消类 E2E 场景补充清理删除。
 
 ### File List
 
@@ -332,13 +348,16 @@ Claude Opus 4.6
 ### Senior Developer Review (AI)
 
 - Reviewer: Arksou
-- Date: 2026-02-11
-- Outcome: Changes Requested
-- Findings Summary: High 3 / Medium 2 / Low 1
-- Action Taken: 按用户选择创建 Action Items（未自动修复代码）
+- Date: 2026-02-12
+- Outcome: Approved
+- Findings Summary: High 0 / Medium 0 / Low 0
+- Action Taken: 已修复第四轮 `Review-R4` 问题并完成复审闭环
 
 ### Change Log
 
 - 2026-02-11: 代码评审完成，新增 `Review Follow-ups (AI)`，并将 Story 状态调整为 `in-progress`。
 - 2026-02-11: 修复全部 Review Follow-ups (6/6)：补充 422/FK 测试、重构数据清理策略、新增 Playwright E2E 测试基础设施、修复移动端菜单可见性、对齐 File List。
 - 2026-02-11: 第二轮 Review 修复 (5/5)：移除 `dependencies: ["setup"]`、删除 AC10 Mock 测试、AC2 超时 3000→1000ms、-1 断言 `in(404,422)`→`==404`、移除未用变量。
+- 2026-02-12: 第三轮 Review 完成，发现剩余问题（High 2 / Medium 2 / Low 1），Story 状态维持 `in-progress`。
+- 2026-02-12: 修复第三轮 Review 问题（5/5）并将 Story 状态更新为 `review`，等待复审。
+- 2026-02-12: 修复第四轮 Review 问题（3/3）并将 Story 状态更新为 `done`，同步冲刺状态。
