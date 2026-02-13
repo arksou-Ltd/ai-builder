@@ -6,7 +6,7 @@ status: 'complete'
 rule_count: 42
 section_count: 6
 optimized_for_llm: true
-source_framework_version: 'arksou-kernel-framework v0.3.9'
+source_framework_version: 'arksou-kernel-framework v0.4.0'
 source_framework_repo: '/Users/itian/Project/arksou-kernel-framework'
 ---
 
@@ -26,7 +26,7 @@ Next.js `16.1.6` (App Router) · React `19.2.3` · TypeScript `^5` · Clerk `^6.
 
 ### Framework Baseline
 `common-kernel` → `arksou-kernel-framework[all]` (rdbms + cache + security + jwks + clerk + webhook)
-固定来源: `ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git` · 固定标签: `v0.3.9`
+固定来源: `ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git` · 固定标签: `v0.4.0`
 
 ### Critical Version Constraints
 - 禁止将框架切换为 PyPI 来源或浮动分支
@@ -35,7 +35,7 @@ Next.js `16.1.6` (App Router) · React `19.2.3` · TypeScript `^5` · Clerk `^6.
 
 ---
 
-## Framework API Reference (v0.3.9)
+## Framework API Reference (v0.4.0)
 
 ### Quick Import Table
 
@@ -43,7 +43,7 @@ Next.js `16.1.6` (App Router) · React `19.2.3` · TypeScript `^5` · Clerk `^6.
 |----------|----------|
 | `create_app`, `BaseAppSettings` | `arksou.kernel.framework.app` |
 | `Result`, `Code`, 异常类, `PageQuery`, `IdGenerator` | `arksou.kernel.framework.base` |
-| `BaseSchema`, `CamelCaseSchema` | `arksou.kernel.framework.base` |
+| `BaseSchema`, `CamelCaseSchema`, `SnowflakeId` | `arksou.kernel.framework.schemas` |
 | `RedisService`, `create_redis_deps`, 缓存装饰器 | `arksou.kernel.framework.cache` |
 | ORM 基类, `create_db_deps`, `SoftDeleteMixin` | `arksou.kernel.framework.rdbms` |
 | `ClerkSettings`, `ClerkAccount`, `create_clerk_deps` | `arksou.kernel.framework.auth.clerk` |
@@ -118,6 +118,7 @@ ServiceException(code, message, http_status?, extra?)
 **Schema 基类:**
 - `BaseSchema`: `from_attributes=True` · `populate_by_name=True` · IntEnum→小写名称 · datetime→ISO 8601 UTC
 - `CamelCaseSchema(BaseSchema)`: 自动 snake_case ↔ camelCase 转换
+- `SnowflakeId`: Python 侧 `int`，JSON 序列化为 `string`（避免 JS 精度丢失）· OpenAPI 标注 `string`
 
 **`PageQuery`**: `page: int` (≥1) · `sort: str | None` (DSL: `"field1:asc,field2:desc"`) · `offset` 属性 · `MAX_LIMIT=100`
 
@@ -329,4 +330,4 @@ ai-builder/
 
 ---
 
-_Generated and optimized on 2026-02-10 based on ai-builder codebase + arksou-kernel-framework v0.3.9 source._
+_Generated and optimized on 2026-02-13 based on ai-builder codebase + arksou-kernel-framework v0.4.0 source._

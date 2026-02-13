@@ -5,8 +5,9 @@ import { SignUp } from "@clerk/nextjs";
  *
  * 使用 Clerk 官方 App Router 路由约定：/sign-up/[[...sign-up]]
  * 避免 Clerk UI 内跳转 404
+ * localePrefix: "never" 模式下，路径固定无 locale 前缀
  */
-export default function SignUpPage() {
+export default async function SignUpPage() {
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
       <div aria-live="polite">

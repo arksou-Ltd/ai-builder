@@ -6,7 +6,7 @@
 import re
 from datetime import datetime
 
-from arksou.kernel.framework.base import CamelCaseSchema
+from arksou.kernel.framework.schemas import CamelCaseSchema, SnowflakeId
 from pydantic import Field, field_validator
 
 # 允许的字符：字母、数字、中文、普通空格、连字符、下划线、点号
@@ -54,7 +54,7 @@ class WorkspaceResponse(CamelCaseSchema):
         updated_at: 更新时间
     """
 
-    id: int = Field(description="工作空间 ID")
+    id: SnowflakeId = Field(description="工作空间 ID")
     name: str = Field(description="工作空间名称")
     created_at: datetime = Field(description="创建时间")
     updated_at: datetime = Field(description="更新时间")

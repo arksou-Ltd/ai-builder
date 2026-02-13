@@ -5,6 +5,8 @@
  *
  * 使用 shadcn Dialog 受控模式 + Form 组件系统 + zodResolver。
  * 提交流程：loading → 调用 API → 成功关闭 / 失败显示错误。
+ *
+ * zod schema 使用工厂函数实现国际化验证消息。
  */
 
 import { useState } from "react";
@@ -13,6 +15,7 @@ import { z } from "zod/v4";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,20 +42,20 @@ import { createWorkspace, type WorkspaceResponse } from "@/lib/api/workspaces";
 /** 允许的字符：字母、数字、中文、普通空格、连字符、下划线、点号 */
 const VALID_NAME_PATTERN = /^[A-Za-z0-9_.\- \u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]+$/u;
 
-/** 表单校验 Schema */
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "工作空间名称不能为空")
-    .max(50, "工作空间名称不能超过 50 个字符")
-    .refine(
-      (v) => VALID_NAME_PATTERN.test(v),
-      "工作空间名称包含非法字符，仅允许字母、数字、中文、空格、连字符、下划线和点号",
-    ),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+/** 表单校验 Schema 工厂函数（支持国际化验证消息） */
+function createFormSchema(t: (key: string) => string) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t("nameRequired"))
+      .max(50, t("nameMaxLength"))
+      .refine(
+        (v) => VALID_NAME_PATTERN.test(v),
+        t("nameInvalidChars"),
+      ),
+  });
+}
 
 interface CreateWorkspaceDialogProps {
   open: boolean;
@@ -70,6 +73,12 @@ export function CreateWorkspaceDialog({
   getToken,
 }: CreateWorkspaceDialogProps) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const t = useTranslations("workspace.createDialog");
+  const tError = useTranslations("workspace.error");
+  const tCommon = useTranslations("common");
+
+  const formSchema = createFormSchema(t);
+  type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -90,14 +99,14 @@ export function CreateWorkspaceDialog({
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.isConflict) {
-          setServerError("工作空间名称已存在");
+          setServerError(t("nameConflict"));
         } else if (error.isInvalidParams) {
           setServerError(error.message);
         } else {
-          toast.error("操作失败，请稍后重试");
+          toast.error(tError("operationFailed"));
         }
       } else {
-        toast.error("网络异常，请检查连接后重试");
+        toast.error(tError("networkError"));
       }
     }
   }
@@ -114,9 +123,9 @@ export function CreateWorkspaceDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>创建工作空间</DialogTitle>
+          <DialogTitle className="font-poppins">{t("title")}</DialogTitle>
           <DialogDescription>
-            为您的项目创建一个新的工作空间
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -126,10 +135,10 @@ export function CreateWorkspaceDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>工作空间名称</FormLabel>
+                  <FormLabel>{t("nameLabel")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="输入工作空间名称"
+                      placeholder={t("namePlaceholder")}
                       autoFocus
                       {...field}
                     />
@@ -152,7 +161,7 @@ export function CreateWorkspaceDialog({
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />
                 )}
-                创建
+                {tCommon("create")}
               </Button>
             </DialogFooter>
           </form>

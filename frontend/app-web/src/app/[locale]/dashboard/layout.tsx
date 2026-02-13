@@ -1,5 +1,7 @@
 import { UserButton } from "@clerk/nextjs";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { getTranslations } from "next-intl/server";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 /**
  * Dashboard 受保护布局
@@ -8,25 +10,27 @@ import { auth, currentUser } from "@clerk/nextjs/server";
  * currentUser() 仅用于获取展示数据（底层 fetch 有请求级去重）。
  */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  // 纵深防御第二层：组件级保护（第一层为 proxy.ts 路由级拦截）
+  // 纵深防御第二层：组件级保护（第一层为 middleware.ts 路由级拦截）
   // 未登录时自动重定向到登录页（携带 returnBackUrl，登录后回跳原目标页面）
   await auth.protect();
 
   // 获取完整用户信息用于展示
   const user = await currentUser();
+  const t = await getTranslations("dashboard");
 
   return (
     <div className="bg-background text-foreground min-h-screen">
       <header className="border-border flex h-16 items-center justify-between border-b px-6">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold">AI Builder</h1>
+          <h1 className="text-lg font-semibold">{t("brandName")}</h1>
         </div>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <span data-testid="user-display-name" className="text-muted-foreground text-sm">
             {user?.firstName?.trim() ||
               user?.username?.trim() ||
               user?.emailAddresses[0]?.emailAddress?.trim() ||
-              "用户"}
+              t("defaultDisplayName")}
           </span>
           <div data-testid="user-avatar">
             <UserButton />

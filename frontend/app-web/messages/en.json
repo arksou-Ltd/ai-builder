@@ -1,0 +1,64 @@
+{
+  "common": {
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading…"
+  },
+  "metadata": {
+    "title": "ai-builder",
+    "description": "AI Builder - Intelligent Development Platform"
+  },
+  "dashboard": {
+    "brandName": "AI Builder",
+    "welcomeBack": "Welcome back, ",
+    "defaultUserName": "Developer",
+    "subtitle": "Manage your AI workspaces and start building next-generation intelligent applications.",
+    "defaultDisplayName": "User"
+  },
+  "workspace": {
+    "title": "My Workspaces",
+    "createButton": "Create Workspace",
+    "cardAriaLabel": "Workspace: {name}",
+    "createdAt": "Created on {date}",
+    "lastUpdated": "Last updated: {date}",
+    "enterSpace": "Enter Space",
+    "actions": "Workspace actions",
+    "deleteAction": "Delete Workspace",
+    "deleteSuccess": "Workspace deleted",
+    "emptyState": {
+      "title": "Start Your First Workspace",
+      "description": "Create a workspace and import a GitHub repository to start building with natural language.",
+      "descriptionSuffix": "All your projects will be displayed here."
+    },
+    "createDialog": {
+      "title": "Create Workspace",
+      "description": "Create a new workspace for your project",
+      "nameLabel": "Workspace Name",
+      "namePlaceholder": "Enter workspace name",
+      "nameRequired": "Workspace name is required",
+      "nameMaxLength": "Workspace name cannot exceed 50 characters",
+      "nameInvalidChars": "Workspace name contains invalid characters. Only letters, numbers, Chinese characters, spaces, hyphens, underscores, and dots are allowed",
+      "nameConflict": "Workspace name already exists"
+    },
+    "deleteDialog": {
+      "title": "Delete \"{name}\"?",
+      "description": "This will delete the workspace. Once deleted, it will be removed from your list.",
+      "confirmButton": "Delete",
+      "pendingButton": "Deleting…"
+    },
+    "error": {
+      "loadFailed": "Failed to Load",
+      "loadFailedDescription": "Unable to load workspace list. Please check your network connection and try again.",
+      "deleteFailed": "Delete failed. Please try again later.",
+      "operationFailed": "Operation failed. Please try again later.",
+      "networkError": "Network error. Please check your connection and try again."
+    }
+  },
+  "languageSwitcher": {
+    "switchToEn": "EN",
+    "switchToZh": "中文"
+  }
+}

@@ -11,7 +11,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { AlertCircle, Plus, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { AlertCircle, Plus, RefreshCw, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,9 @@ export function WorkspaceList() {
   const { user } = useUser();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const t = useTranslations("workspace");
+  const tError = useTranslations("workspace.error");
+  const tCommon = useTranslations("common");
 
   // 删除相关状态
   const [deleteTarget, setDeleteTarget] = useState<WorkspaceResponse | null>(null);
@@ -45,8 +49,8 @@ export function WorkspaceList() {
 
   // 删除 mutation：乐观更新 + 失败回滚
   const deleteMutation = useMutation({
-    mutationFn: (workspaceId: number) => deleteWorkspace(workspaceId, getToken),
-    onMutate: async (workspaceId: number) => {
+    mutationFn: (workspaceId: string) => deleteWorkspace(workspaceId, getToken),
+    onMutate: async (workspaceId: string) => {
       // 取消正在进行的查询，避免覆盖乐观更新
       await queryClient.cancelQueries({ queryKey });
 
@@ -65,10 +69,10 @@ export function WorkspaceList() {
       if (context?.previousWorkspaces) {
         queryClient.setQueryData(queryKey, context.previousWorkspaces);
       }
-      toast.error("删除失败，请稍后重试");
+      toast.error(tError("deleteFailed"));
     },
     onSuccess: () => {
-      toast.success("工作空间已删除");
+      toast.success(t("deleteSuccess"));
     },
     onSettled: () => {
       // 无论成败，最终与服务器同步
@@ -87,10 +91,10 @@ export function WorkspaceList() {
     }
   }
 
-  function handleCreateOptimistic(createdWorkspace: { id: number; name: string; createdAt: string; updatedAt: string }) {
+  function handleCreateOptimistic(createdWorkspace: { id: string; name: string; createdAt: string; updatedAt: string }) {
     queryClient.setQueryData(
       queryKey,
-      (prev: { id: number; name: string; createdAt: string; updatedAt: string }[] | undefined) => {
+      (prev: { id: string; name: string; createdAt: string; updatedAt: string }[] | undefined) => {
         if (!prev) {
           return [createdWorkspace];
         }
@@ -109,15 +113,18 @@ export function WorkspaceList() {
   // 加载态：3 张骨架卡片
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">我的工作空间</h2>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between border-b border-border/50 pb-4">
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="text-primary h-5 w-5" />
+            <h2 className="font-poppins text-xl font-semibold tracking-tight">{t("title")}</h2>
+          </div>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="border-border rounded-lg border p-6">
+            <div key={i} className="rounded-xl border border-border/50 bg-white/50 p-6 backdrop-blur-sm dark:bg-white/5">
               <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="mt-3 h-4 w-1/2" />
+              <Skeleton className="mt-4 h-4 w-1/2" />
             </div>
           ))}
         </div>
@@ -128,23 +135,26 @@ export function WorkspaceList() {
   // 错误态：显示错误信息和重试按钮
   if (isError) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">我的工作空间</h2>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between border-b border-border/50 pb-4">
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="text-primary h-5 w-5" />
+            <h2 className="font-poppins text-xl font-semibold tracking-tight">{t("title")}</h2>
+          </div>
         </div>
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-xl border border-destructive/20 bg-destructive/5 py-16 text-center">
           <AlertCircle className="text-destructive h-12 w-12" />
-          <h3 className="text-lg font-semibold">加载失败</h3>
+          <h3 className="text-lg font-semibold text-destructive">{tError("loadFailed")}</h3>
           <p className="text-muted-foreground text-sm">
-            无法获取工作空间列表，请检查网络连接后重试
+            {tError("loadFailedDescription")}
           </p>
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="cursor-pointer"
+            className="cursor-pointer border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
-            重试
+            {tCommon("retry")}
           </Button>
         </div>
       </div>
@@ -154,16 +164,19 @@ export function WorkspaceList() {
   const isEmpty = !workspaces || workspaces.length === 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">我的工作空间</h2>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between border-b border-border/50 pb-4">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="text-primary h-5 w-5" />
+          <h2 className="font-poppins text-xl font-semibold tracking-tight">{t("title")}</h2>
+        </div>
         {!isEmpty && (
           <Button
             onClick={() => setDialogOpen(true)}
-            className="cursor-pointer"
+            className="cursor-pointer bg-primary font-medium text-primary-foreground shadow-lg hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus className="mr-2 h-4 w-4" />
-            创建工作空间
+            {t("createButton")}
           </Button>
         )}
       </div>
@@ -171,7 +184,7 @@ export function WorkspaceList() {
       {isEmpty ? (
         <WorkspaceEmptyState onCreateClick={() => setDialogOpen(true)} />
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {workspaces.map((ws) => (
             <WorkspaceCard
               key={ws.id}

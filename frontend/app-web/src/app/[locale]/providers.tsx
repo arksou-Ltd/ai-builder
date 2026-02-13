@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
+import { useLocale } from "next-intl";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -13,11 +14,13 @@ interface ProvidersProps {
  * 全局 Provider 容器
  *
  * 包含：
- * - ClerkProvider：身份认证
+ * - ClerkProvider：身份认证（afterSignOutUrl locale 感知）
  * - QueryClientProvider：TanStack Query 状态管理
  * - Toaster：全局 Toast 通知（Sonner）
  */
 export function Providers({ children }: ProvidersProps) {
+  const locale = useLocale();
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -34,8 +37,11 @@ export function Providers({ children }: ProvidersProps) {
       })
   );
 
+  // 默认语言不带前缀，其他语言带前缀
+  const signInPath = locale === "zh-CN" ? "/sign-in" : `/${locale}/sign-in`;
+
   return (
-    <ClerkProvider afterSignOutUrl="/sign-in" appearance={{ cssLayerName: "clerk" }}>
+    <ClerkProvider afterSignOutUrl={signInPath} appearance={{ cssLayerName: "clerk" }}>
       <QueryClientProvider client={queryClient}>
         {children}
         <Toaster />

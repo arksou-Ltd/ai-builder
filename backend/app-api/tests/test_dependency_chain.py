@@ -224,7 +224,8 @@ class TestDependencyChainImport:
 
     def test_arksou_kernel_framework_base_import(self) -> None:
         """arksou.kernel.framework.base core components must be importable."""
-        from arksou.kernel.framework.base import Result, Code, BaseSchema  # noqa: F401
+        from arksou.kernel.framework.base import Result, Code  # noqa: F401
+        from arksou.kernel.framework.schemas import BaseSchema  # noqa: F401
 
     def test_arksou_exception_import(self) -> None:
         """arksou exception hierarchy must be importable."""

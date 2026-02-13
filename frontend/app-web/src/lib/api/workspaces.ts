@@ -8,7 +8,7 @@ import { apiRequest } from "@/lib/api-client";
 
 /** 工作空间响应类型（与后端 WorkspaceResponse CamelCase 对齐） */
 export interface WorkspaceResponse {
-  id: number;
+  id: string;
   name: string;
   createdAt: string;
   updatedAt: string;
@@ -48,7 +48,7 @@ export async function listWorkspaces(
  * 删除工作空间（软删除）
  */
 export async function deleteWorkspace(
-  id: number,
+  id: string,
   getToken: () => Promise<string | null>,
 ): Promise<void> {
   await apiRequest<null>(

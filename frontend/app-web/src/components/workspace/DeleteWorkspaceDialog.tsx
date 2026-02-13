@@ -7,6 +7,8 @@
  * 确认后触发删除回调，取消则不执行任何操作。
  */
 
+import { useTranslations } from "next-intl";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,15 +40,18 @@ export function DeleteWorkspaceDialog({
   onConfirm,
   isPending,
 }: DeleteWorkspaceDialogProps) {
+  const t = useTranslations("workspace.deleteDialog");
+  const tCommon = useTranslations("common");
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            确认删除「{workspaceName}」？
+          <AlertDialogTitle className="font-poppins">
+            {t("title", { name: workspaceName })}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            此操作将删除该工作空间。删除后，工作空间将从列表中移除。
+            {t("description")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -54,14 +59,14 @@ export function DeleteWorkspaceDialog({
             disabled={isPending}
             className="cursor-pointer"
           >
-            取消
+            {tCommon("cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}
             className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"
           >
-            {isPending ? "删除中…" : "确认删除"}
+            {isPending ? t("pendingButton") : t("confirmButton")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

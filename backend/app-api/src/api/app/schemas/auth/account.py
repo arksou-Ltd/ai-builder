@@ -3,7 +3,7 @@
 定义账户相关的响应数据结构。
 """
 
-from arksou.kernel.framework.base import BaseSchema
+from arksou.kernel.framework.schemas import BaseSchema
 from pydantic import Field
 
 
