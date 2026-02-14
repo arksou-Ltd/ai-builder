@@ -48,9 +48,9 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Identity & Workspace Setup
-  epic-2: in-progress
+  epic-2: done
   2-1-clerk-sign-in: done
   2-2-sign-out: done
   2-3-workspace-create: done
   2-4-workspace-delete: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
