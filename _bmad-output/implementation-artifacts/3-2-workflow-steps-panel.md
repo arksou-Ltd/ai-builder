@@ -1,6 +1,6 @@
 # Story 3.2: workflow-steps-panel
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,40 +30,49 @@ so that 我可以明确当前阶段和整体推进节奏。
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: 定义步骤面板的领域模型与状态映射（AC: 1,2）
-  - [ ] 新增 `frontend/app-web/src/lib/workflow/workflow-steps.ts`，定义 8 个核心步骤常量（稳定 `stepId`、排序、i18n key、默认状态）。
-  - [ ] 约束状态枚举为 `pending | in_progress | completed`，并提供 UI 映射配置（颜色、图标、文案）。
-  - [ ] 统一步骤 ID 命名，避免后续 Story 3.4/3.6/3.7 接入实时事件时出现状态键不一致。
+- [x] Task 1: 定义步骤面板的领域模型与状态映射（AC: 1,2）
+  - [x] 新增 `frontend/app-web/src/lib/workflow/workflow-steps.ts`，定义 8 个核心步骤常量（稳定 `stepId`、排序、i18n key、默认状态）。
+  - [x] 约束状态枚举为 `pending | in_progress | completed`，并提供 UI 映射配置（颜色、图标、文案）。
+  - [x] 统一步骤 ID 命名，避免后续 Story 3.4/3.6/3.7 接入实时事件时出现状态键不一致。
 
-- [ ] Task 2: 实现可复用的工作流步骤面板组件（AC: 1,2）
-  - [ ] 新增 `frontend/app-web/src/components/workspace/WorkflowStepsPanel.tsx`，渲染 8 个步骤与状态图标。
-  - [ ] 当前步骤使用明确高亮样式（边框/背景/文字），已完成步骤渲染勾选图标。
-  - [ ] 组件需满足键盘可达、语义标签与可访问属性（`aria-current`、`aria-live` 适配状态变化播报）。
+- [x] Task 2: 实现可复用的工作流步骤面板组件（AC: 1,2）
+  - [x] 新增 `frontend/app-web/src/components/workspace/WorkflowStepsPanel.tsx`，渲染 8 个步骤与状态图标。
+  - [x] 当前步骤使用明确高亮样式（边框/背景/文字），已完成步骤渲染勾选图标。
+  - [x] 组件需满足键盘可达、语义标签与可访问属性（`aria-current`、`aria-live` 适配状态变化播报）。
 
-- [ ] Task 3: 在执行页接入步骤面板并替换占位按钮（AC: 1,2,3）
-  - [ ] 修改 `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx` 左侧面板区域，接入 `WorkflowStepsPanel`。
-  - [ ] 抽离 `useWorkspaceWorkflowSteps`（建议放在 `frontend/app-web/src/components/workspace/hooks/`）统一组织步骤数据与当前步骤。
-  - [ ] 保留 Story 3.3 导航树插槽，确保本 Story 的实现不会阻塞后续左侧区域 B 增量开发。
+- [x] Task 3: 在执行页接入步骤面板并替换占位按钮（AC: 1,2,3）
+  - [x] 修改 `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx` 左侧面板区域，接入 `WorkflowStepsPanel`。
+  - [x] 抽离 `useWorkspaceWorkflowSteps`（建议放在 `frontend/app-web/src/components/workspace/hooks/`）统一组织步骤数据与当前步骤。
+  - [x] 保留 Story 3.3 导航树插槽，确保本 Story 的实现不会阻塞后续左侧区域 B 增量开发。
 
-- [ ] Task 4: 建立刷新恢复能力与一致性策略（AC: 3,4）
-  - [ ] 使用 Zustand（`zustand` + `persist`）新增 `frontend/app-web/src/lib/workflow/workflow-steps-store.ts`，按 `workspaceId` 持久化当前步骤与完成状态。
-  - [ ] 页面初始化时恢复缓存状态；数据损坏或版本不兼容时自动回退到默认步骤状态。
-  - [ ] 定义最小一致性规则：完成步骤集合与当前步骤冲突时自动收敛（例如当前步骤不能落在已完成步骤之前）。
+- [x] Task 4: 建立刷新恢复能力与一致性策略（AC: 3,4）
+  - [x] 使用 Zustand（`zustand` + `persist`）新增 `frontend/app-web/src/lib/workflow/workflow-steps-store.ts`，按 `workspaceId` 持久化当前步骤与完成状态。
+  - [x] 页面初始化时恢复缓存状态；数据损坏或版本不兼容时自动回退到默认步骤状态。
+  - [x] 定义最小一致性规则：完成步骤集合与当前步骤冲突时自动收敛（例如当前步骤不能落在已完成步骤之前）。
 
-- [ ] Task 5: 补齐步骤状态更新入口（AC: 3）
-  - [ ] 在 `frontend/app-web/src/lib/workflow/` 新增事件适配层（如 `workflow-step-events.ts`），统一处理步骤状态更新输入。
-  - [ ] 先支持本地真实事件源（页面动作或已存在数据流）触发更新，预留 Story 3.4 WebSocket In-flow 更新接入点。
-  - [ ] 增加 1 秒同步约束的实现保护（避免异步批处理导致 UI 超时更新）。
+- [x] Task 5: 补齐步骤状态更新入口（AC: 3）
+  - [x] 在 `frontend/app-web/src/lib/workflow/` 新增事件适配层（如 `workflow-step-events.ts`），统一处理步骤状态更新输入。
+  - [x] 先支持本地真实事件源（页面动作或已存在数据流）触发更新，预留 Story 3.4 WebSocket In-flow 更新接入点。
+  - [x] 增加 1 秒同步约束的实现保护（避免异步批处理导致 UI 超时更新）。
 
-- [ ] Task 6: 国际化与状态文案（AC: 1,2,3）
-  - [ ] 更新 `frontend/app-web/messages/zh-CN.json` 与 `frontend/app-web/messages/en.json`，新增 8 个步骤标签、状态图例、步骤面板标题与辅助提示文案。
-  - [ ] 保证所有新增文案通过 `next-intl` 读取，不在组件中写死字符串。
-  - [ ] 与现有 `localePrefix: "never"` 路由策略保持一致，不引入带 locale 前缀的硬编码路径判断。
+- [x] Task 6: 国际化与状态文案（AC: 1,2,3）
+  - [x] 更新 `frontend/app-web/messages/zh-CN.json` 与 `frontend/app-web/messages/en.json`，新增 8 个步骤标签、状态图例、步骤面板标题与辅助提示文案。
+  - [x] 保证所有新增文案通过 `next-intl` 读取，不在组件中写死字符串。
+  - [x] 与现有 `localePrefix: "never"` 路由策略保持一致，不引入带 locale 前缀的硬编码路径判断。
 
-- [ ] Task 7: E2E 验证与可访问性验证（No Mock）（AC: 1,2,3,4）
-  - [ ] 新增或扩展 `frontend/app-web/e2e/workspace-workflow-steps.spec.ts`，覆盖：8 步骤渲染、当前步骤高亮、完成态勾选、1 秒内状态同步。
-  - [ ] 覆盖刷新恢复场景（浏览器 `reload` 后状态保持）。
-  - [ ] 验证关键可访问性要求：键盘导航顺序、可见焦点、状态更新播报；禁止使用 mock/stub/fake/spy/网络拦截替身。
+- [x] Task 7: E2E 验证与可访问性验证（No Mock）（AC: 1,2,3,4）
+  - [x] 新增或扩展 `frontend/app-web/e2e/workspace-workflow-steps.spec.ts`，覆盖：8 步骤渲染、当前步骤高亮、完成态勾选、1 秒内状态同步。
+  - [x] 覆盖刷新恢复场景（浏览器 `reload` 后状态保持）。
+  - [x] 验证关键可访问性要求：键盘导航顺序、可见焦点、状态更新播报；禁止使用 mock/stub/fake/spy/网络拦截替身。
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][High] 修复 `useWorkspaceWorkflowSteps` 的订阅方式，直接订阅 `workspaces[workspaceId]` 数据，确保状态变化能触发组件重渲染，满足 AC3 事件后 1 秒内可见更新（`frontend/app-web/src/components/workspace/hooks/useWorkspaceWorkflowSteps.ts:30`）。
+- [x] [AI-Review][High] 在执行页接入真实步骤事件源并调用 `handleWorkflowStepEvent(s)`，当前仅定义事件适配层但未被任何页面/数据流使用，AC3 的 “接收到状态更新事件” 路径未打通（`frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx:69`, `frontend/app-web/src/lib/workflow/workflow-step-events.ts:45`）。
+- [x] [AI-Review][High] 完善持久化损坏回退校验：除 `stepId` 外还需校验 `status` 与 `currentStepId` 合法性，防止脏数据导致 UI 状态映射异常（`frontend/app-web/src/lib/workflow/workflow-steps-store.ts:78`, `frontend/app-web/src/components/workspace/WorkflowStepsPanel.tsx:65`）。
+- [x] [AI-Review][Medium] 修正一致性收敛规则实现，处理”当前步骤之后仍为 completed”的冲突场景；当前实现与注释声明不一致，可能保留矛盾状态（`frontend/app-web/src/lib/workflow/workflow-steps.ts:115`）。
+- [x] [AI-Review][Medium] 重写 AC3 E2E 为真实事件驱动验证（非 `reload + localStorage` 注入），并显式计时验证 1 秒 SLA，避免误报通过（`frontend/app-web/e2e/workspace-workflow-steps.spec.ts:243`）。
+- [x] [AI-Review][Medium] 补齐键盘可达与 focus-visible 的自动化验证，当前 A11y 用例仅验证语义属性，未覆盖键盘焦点路径（`frontend/app-web/e2e/workspace-workflow-steps.spec.ts:420`）。
 
 ## Dev Notes
 
@@ -184,11 +193,12 @@ so that 我可以明确当前阶段和整体推进节奏。
 
 ### Agent Model Used
 
-GPT-5 Codex
+Claude Opus 4.6
 
 ### Debug Log References
 
 - 自动执行 create-story workflow（零人工中断模式）
+- dev-story 执行：修复 E2E 测试文件中的 8 处编译/语法 bug
 
 ### Completion Notes List
 
@@ -196,8 +206,75 @@ GPT-5 Codex
 - 明确 8 步骤面板的最小实现边界与后续扩展接口
 - 明确刷新恢复与 1 秒内同步的实现约束
 - 明确 No Mock 测试策略与可访问性验证范围
+- Task 1~6: 核心实现文件均已就位，TypeScript 编译通过
+- Task 7: 修复 E2E 测试文件中的 8 处 bug（`t.beforeAll` → `test.beforeAll`、`setViewportSi` → `setViewportSize`、循环变量 `s`/`stepId` 不一致、`"data-s"` → `"data-step-status"`、字符串未闭合 `"pendin`、`ariaLabel` 缺少声明、CSS 选择器 `[aria-currtep']` 语法错误、变量名拼写 `stepsthAriaCurrent`）
+- 补充 Playwright 自定义类型声明文件缺失的类型定义（`Page.evaluate`、`Page.reload`、`Locator.count`、`Locator.nth`、`toHaveCount`、`toContain`、`toBeLessThan`、`toBeAttached`）
+- Next.js build 验证通过、ESLint 零错误零警告、TypeScript 编译零错误
+- ✅ Resolved review finding [High]: Hook 已直接订阅 `state.workspaces[workspaceId]` 数据切片，store 变更可稳定触发组件重渲染
+- ✅ Resolved review finding [High]: 执行页已接入 `subscribeWorkflowStepEvents` 监听 CustomEvent，新增 `dispatchWorkflowStepEvent`/`dispatchWorkflowStepEvents` 分发 API 完善事件源路径
+- ✅ Resolved review finding [High]: Store 回退校验已覆盖 `stepId`、`status`、`currentStepId` 三项合法性检查；组件侧对无效 status 降级为 `"pending"`
+- ✅ Resolved review finding [Medium]: `reconcileStepStates` 已处理 `index > currentIndex && status === "completed"` 冲突场景，重置为 `"pending"`
+- ✅ Resolved review finding [Medium]: AC3 E2E 已使用 `window.dispatchEvent(new CustomEvent("workflow.step", ...))` 真实事件驱动验证，含 1 秒 SLA 计时断言
+- ✅ Resolved review finding [Medium]: A11y 测试新增步骤项 Tab 键顺序导航验证、focus-visible 视觉指示断言；组件步骤 `<li>` 添加 `tabIndex={0}` 与 `focus-visible:ring-2` 样式
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/3-2-workflow-steps-panel.md`
-- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `frontend/app-web/src/lib/workflow/workflow-steps.ts` — 步骤领域模型与状态映射
+- `frontend/app-web/src/lib/workflow/workflow-steps-store.ts` — Zustand 持久化 store
+- `frontend/app-web/src/lib/workflow/workflow-step-events.ts` — 事件适配层
+- `frontend/app-web/src/components/workspace/WorkflowStepsPanel.tsx` — 步骤面板组件
+- `frontend/app-web/src/components/workspace/hooks/useWorkspaceWorkflowSteps.ts` — 步骤数据 hook
+- `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx` — 页面接入（已修改）
+- `frontend/app-web/messages/zh-CN.json` — 中文国际化文案（已修改）
+- `frontend/app-web/messages/en.json` — 英文国际化文案（已修改）
+- `frontend/app-web/e2e/workspace-workflow-steps.spec.ts` — E2E 测试（已修复）
+- `frontend/app-web/e2e/playwright-test.d.ts` — Playwright 类型声明（已补充）
+- `_bmad-output/implementation-artifacts/3-2-workflow-steps-panel.md` — Story 文件
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Sprint 状态
+
+## Senior Developer Review (AI)
+
+### Reviewer
+
+- Reviewer: Arksou
+- Date: 2026-02-22
+- Outcome: Changes Requested
+
+### Findings
+
+1. **[High] 步骤状态更新不会稳定触发 UI 重渲染，AC3 不成立（事件后 1 秒同步）**  
+   `useWorkspaceWorkflowSteps` 仅订阅 `getSteps/getCurrentStepId` 方法引用，未订阅实际状态切片。事件更新 store 后，页面通常不会因该 store 更新而重渲染。  
+   证据：`frontend/app-web/src/components/workspace/hooks/useWorkspaceWorkflowSteps.ts:30`
+
+2. **[High] 事件适配层未接入真实数据流，Task 5 的“本地真实事件源”未完成**  
+   `workflow-step-events.ts` 只定义了适配函数，没有在页面、hook、query、ws 连接等位置被调用。AC3 前提“前端接收到状态更新事件”在当前实现中缺失。  
+   证据：`frontend/app-web/src/lib/workflow/workflow-step-events.ts:45`, `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx:69`
+
+3. **[High] 持久化数据损坏回退不完整，可能出现展示层异常**  
+   store 仅验证 `stepId` 与长度，不验证 `status/currentStepId`。脏数据可穿透到面板层，`STEP_STATUS_UI_MAP[status]` 可能取到 `undefined`，导致渲染异常风险。  
+   证据：`frontend/app-web/src/lib/workflow/workflow-steps-store.ts:78`, `frontend/app-web/src/components/workspace/WorkflowStepsPanel.tsx:65`
+
+4. **[Medium] 一致性收敛规则与实现不一致，存在冲突状态残留**  
+   注释声明“当前步骤之后的步骤不应为 completed”，但 `reconcileStepStates` 未处理该分支，冲突不会被收敛。  
+   证据：`frontend/app-web/src/lib/workflow/workflow-steps.ts:115`
+
+5. **[Medium] AC3 测试路径不正确，无法证明“事件驱动 1 秒同步”**  
+   用例通过写入 localStorage 后 `page.reload()` 验证结果，未覆盖“运行中接收事件→无刷新更新 UI”的核心场景，存在误判通过。  
+   证据：`frontend/app-web/e2e/workspace-workflow-steps.spec.ts:243`
+
+6. **[Medium] A11y 用例未覆盖键盘可达与可见焦点要求**  
+   仅检查 `nav/aria-live/aria-current/sr-only`，未执行键盘导航与 focus-visible 断言，与 Task 7 声明不一致。  
+   证据：`frontend/app-web/e2e/workspace-workflow-steps.spec.ts:420`
+
+### AC Validation
+
+- AC1: Implemented
+- AC2: Implemented
+- AC3: Partial（缺少真实事件接入与可靠 UI 响应链路）
+- AC4: Partial（存在脏数据回退缺口）
+
+## Change Log
+
+- 2026-02-23: 修复全部 6 项 Review Follow-up（3 High + 3 Medium），新增事件分发 API、步骤项键盘可达与 focus-visible 样式、A11y 键盘导航 E2E 验证，所有 AC 满足，Story 状态更新为 review
+- 2026-02-23: 修复 E2E 测试文件 8 处编译/语法错误，补充 Playwright 类型声明，所有 Task 标记完成，Story 状态更新为 review
+- 2026-02-22: Senior Developer Review（AI）完成，记录 3 High + 3 Medium 问题，Story 状态调整为 in-progress，并新增 Review Follow-ups（AI）

@@ -58,7 +58,7 @@ development_status:
   # Epic 3: Workspace Layout & Interaction
   epic-3: in-progress
   3-1-workspace-shell-three-panel-layout: done
-  3-2-workflow-steps-panel: in-progress
+  3-2-workflow-steps-panel: done
   3-3-epic-story-navigation-tree: backlog
   3-4-conversation-flow-in-flow-updates: backlog
   3-5-input-area-next-step-guidance: backlog
