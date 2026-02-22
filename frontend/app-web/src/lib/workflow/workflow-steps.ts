@@ -9,6 +9,12 @@
 
 export type WorkflowStepStatus = "pending" | "in_progress" | "completed";
 
+const VALID_STEP_STATUSES = new Set<WorkflowStepStatus>([
+  "pending",
+  "in_progress",
+  "completed",
+]);
+
 // ─── 步骤定义 ───────────────────────────────────────────────────
 
 export interface WorkflowStepDefinition {
@@ -112,6 +118,13 @@ export function isValidStepId(id: string): id is WorkflowStepId {
 }
 
 /**
+ * 校验步骤状态是否为合法三态之一
+ */
+export function isValidStepStatus(status: unknown): status is WorkflowStepStatus {
+  return typeof status === "string" && VALID_STEP_STATUSES.has(status as WorkflowStepStatus);
+}
+
+/**
  * 一致性收敛：确保当前步骤不落在已完成步骤之前
  *
  * 规则：
@@ -138,6 +151,10 @@ export function reconcileStepStates(
     if (index === currentIndex && step.status === "pending") {
       // 当前步骤至少应为 in_progress
       return { ...step, status: "in_progress" as const };
+    }
+    if (index > currentIndex && step.status === "completed") {
+      // 当前步骤之后的步骤不能提前为 completed
+      return { ...step, status: "pending" as const };
     }
     return step;
   });

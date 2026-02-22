@@ -16,6 +16,7 @@ import {
   type WorkflowStepState,
   type WorkflowStepId,
   type WorkflowStepStatus,
+  isValidStepStatus,
   WORKFLOW_STEPS,
   STEP_STATUS_UI_MAP,
 } from "@/lib/workflow/workflow-steps";
@@ -60,7 +61,10 @@ export function WorkflowStepsPanel({
       </h2>
       <ol className="space-y-1" role="list">
         {WORKFLOW_STEPS.map((stepDef) => {
-          const status = statusMap.get(stepDef.stepId) ?? "pending";
+          const rawStatus = statusMap.get(stepDef.stepId);
+          const status: WorkflowStepStatus = isValidStepStatus(rawStatus)
+            ? rawStatus
+            : "pending";
           const isCurrent = stepDef.stepId === currentStepId;
           const uiConfig = STEP_STATUS_UI_MAP[status];
           const IconComponent = ICON_MAP[uiConfig.icon];
@@ -69,11 +73,13 @@ export function WorkflowStepsPanel({
             <li
               key={stepDef.stepId}
               role="listitem"
+              tabIndex={0}
               aria-current={isCurrent ? "step" : undefined}
               data-testid={`workflow-step-${stepDef.stepId}`}
               data-step-status={status}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isCurrent
                   ? "bg-accent border border-border font-medium text-foreground"
                   : "text-muted-foreground",

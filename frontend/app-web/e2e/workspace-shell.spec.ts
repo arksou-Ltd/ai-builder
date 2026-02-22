@@ -6,7 +6,7 @@
  * - AC2: >=1024px 布局稳定，面板互不覆盖
  * - AC3: 左侧折叠与焦点可达性
  * - AC4: 异常恢复与重试机制
- * - AC5: Workspace Settings 与 GitHub 区块入口
+ * - AC5: 右侧面板 Settings Tab 与 GitHub 区块入口
  *
  * 前置条件：
  * - 已执行 auth.setup.ts 生成认证状态文件
@@ -252,7 +252,7 @@ test.describe("工作空间执行页壳层", () => {
     page.off("request", requestListener);
   });
 
-  test("AC5: 顶部导航提供 Settings 入口，展示 GitHub 区块", async ({ page }) => {
+  test("AC5: 右侧面板 Settings Tab 入口，展示 GitHub 区块", async ({ page }) => {
     await page.goto(`/dashboard`);
     await expect(page.getByRole("heading", { name: TEXT.dashboardTitle })).toBeVisible({
       timeout: 10_000,
@@ -261,12 +261,16 @@ test.describe("工作空间执行页壳层", () => {
     await card.getByRole("button", { name: TEXT.enterSpace }).click();
     await page.waitForURL("**/workspace/**", { timeout: 10_000 });
 
-    // 验证顶部导航中存在 Settings 入口
-    const settingsButton = page.locator("button", { hasText: TEXT.settings });
-    await expect(settingsButton).toBeVisible();
+    // 验证右侧面板 Tab 结构存在
+    const rightPanel = page.locator("aside");
+    await expect(rightPanel).toBeVisible();
 
-    // 点击进入 Settings
-    await settingsButton.click();
+    // 验证 Settings Tab 触发器存在
+    const settingsTab = rightPanel.getByRole("tab", { name: TEXT.settings });
+    await expect(settingsTab).toBeVisible();
+
+    // 点击 Settings Tab
+    await settingsTab.click();
 
     // 验证 Code Sources 区块存在
     const codeSourcesSection = page.getByText(TEXT.codeSources);

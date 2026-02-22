@@ -13,6 +13,8 @@ declare module "@playwright/test" {
 
   export interface Locator {
     first(): Locator;
+    nth(index: number): Locator;
+    count(): Promise<number>;
     locator(selector: string, options?: Record<string, unknown>): Locator;
     getByRole(role: string, options?: Record<string, unknown>): Locator;
     getByText(text: string | RegExp): Locator;
@@ -43,6 +45,8 @@ declare module "@playwright/test" {
     off(event: string, listener: (request: Request) => void): void;
     context(): BrowserContext;
     keyboard: Keyboard;
+    evaluate<R, A = void>(fn: (arg: A) => R, arg?: A): Promise<R>;
+    reload(): Promise<void>;
   }
 
   export interface BrowserContext {
@@ -86,12 +90,16 @@ declare module "@playwright/test" {
     toBeVisible(options?: Record<string, unknown>): Promise<void> | void;
     toBeFocused(options?: Record<string, unknown>): Promise<void> | void;
     toBeEnabled(options?: Record<string, unknown>): Promise<void> | void;
+    toBeAttached(options?: Record<string, unknown>): Promise<void> | void;
     toHaveClass(value: unknown): Promise<void> | void;
     toHaveURL(value: unknown): Promise<void> | void;
     toHaveCSS(property: string, value: string): Promise<void> | void;
-    toHaveAttribute(name: string, value?: unknown): Promise<void> | void;
+    toHaveAttribute(name: string, value?: unknown, options?: Record<string, unknown>): Promise<void> | void;
+    toHaveCount(count: number): Promise<void> | void;
+    toContain(value: unknown): Promise<void> | void;
     toBeGreaterThan(value: number): Promise<void> | void;
     toBeGreaterThanOrEqual(value: number): Promise<void> | void;
+    toBeLessThan(value: number): Promise<void> | void;
     toBeLessThanOrEqual(value: number): Promise<void> | void;
   }
 

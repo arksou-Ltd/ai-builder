@@ -3,23 +3,19 @@
 /**
  * 工作空间执行页顶部导航
  *
- * 包含品牌标识、工作空间名称、Settings 入口、语言切换、用户头像
+ * 包含品牌标识、工作空间名称、语言切换、用户头像
  */
 
 import { UserButton } from "@clerk/nextjs";
-import { Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface WorkspaceHeaderProps {
   workspaceName: string;
-  onSettingsClick: () => void;
 }
 
-export function WorkspaceHeader({ workspaceName, onSettingsClick }: WorkspaceHeaderProps) {
-  const t = useTranslations("workspaceShell");
+export function WorkspaceHeader({ workspaceName }: WorkspaceHeaderProps) {
   const tDashboard = useTranslations("dashboard");
 
   return (
@@ -34,15 +30,6 @@ export function WorkspaceHeader({ workspaceName, onSettingsClick }: WorkspaceHea
       </div>
 
       <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onSettingsClick}
-          className="text-muted-foreground hover:text-foreground gap-1.5"
-        >
-          <Settings className="size-4" />
-          {t("settings")}
-        </Button>
         <LanguageSwitcher />
         <UserButton />
       </div>

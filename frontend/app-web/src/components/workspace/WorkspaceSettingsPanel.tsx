@@ -20,29 +20,19 @@ interface WorkspaceSettingsPanelProps {
   githubAuthorized: boolean;
   githubRepoCount: number;
   onManageGithub?: () => void;
-  onClose: () => void;
 }
 
 export function WorkspaceSettingsPanel({
   githubAuthorized,
   githubRepoCount,
   onManageGithub,
-  onClose,
 }: WorkspaceSettingsPanelProps) {
   const t = useTranslations("workspaceShell");
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-border flex items-center justify-between border-b pb-4">
+      <div className="border-border border-b pb-4">
         <h2 className="text-lg font-semibold">{t("workspaceSettings")}</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          aria-label={t("closeSettings")}
-        >
-          ✕
-        </Button>
       </div>
 
       <div className="mt-6">

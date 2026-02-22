@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
+import { ListChecks, Settings } from "lucide-react";
 
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 import { WorkspaceHeader } from "@/components/workspace/WorkspaceHeader";
@@ -22,14 +23,15 @@ import { WorkflowStepsPanel } from "@/components/workspace/WorkflowStepsPanel";
 import { useWorkspaceWorkflowSteps } from "@/components/workspace/hooks/useWorkspaceWorkflowSteps";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getWorkspace } from "@/lib/api/workspaces";
+import { subscribeWorkflowStepEvents } from "@/lib/workflow/workflow-step-events";
 
 export default function WorkspacePage() {
   const params = useParams<{ workspaceId: string }>();
   const { getToken } = useAuth();
   const { user } = useUser();
   const t = useTranslations("workspaceShell");
-  const [showSettings, setShowSettings] = useState(false);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -46,6 +48,11 @@ export default function WorkspacePage() {
     mediaQuery.addListener(syncDesktopState);
     return () => mediaQuery.removeListener(syncDesktopState);
   }, []);
+
+  useEffect(() => {
+    if (!params.workspaceId) return;
+    return subscribeWorkflowStepEvents(params.workspaceId);
+  }, [params.workspaceId]);
 
   // 获取工作空间详情
   const {
@@ -75,14 +82,6 @@ export default function WorkspacePage() {
     refetch();
   }, [refetch]);
 
-  const handleSettingsClick = useCallback(() => {
-    setShowSettings(true);
-  }, []);
-
-  const handleSettingsClose = useCallback(() => {
-    setShowSettings(false);
-  }, []);
-
   if (isDesktop === false) {
     return <DesktopGuard />;
   }
@@ -97,7 +96,6 @@ export default function WorkspacePage() {
       <>
         <WorkspaceHeader
           workspaceName=""
-          onSettingsClick={handleSettingsClick}
         />
         <WorkspaceShell
           leftPanel={
@@ -129,7 +127,6 @@ export default function WorkspacePage() {
       <>
         <WorkspaceHeader
           workspaceName=""
-          onSettingsClick={handleSettingsClick}
         />
         <WorkspaceShell
           centerPanel={<WorkspaceError onRetry={handleRetry} />}
@@ -143,7 +140,6 @@ export default function WorkspacePage() {
     <>
       <WorkspaceHeader
         workspaceName={workspace?.name ?? ""}
-        onSettingsClick={handleSettingsClick}
       />
       <WorkspaceShell
         leftPanel={
@@ -173,18 +169,29 @@ export default function WorkspacePage() {
           </div>
         }
         rightPanel={
-          showSettings ? (
-            <WorkspaceSettingsPanel
-              githubAuthorized={githubAuthorized}
-              githubRepoCount={githubRepoCount}
-              onClose={handleSettingsClose}
-            />
-          ) : (
-            <div className="space-y-3">
-              {/* Story 3.6~3.10 将在此处实现右侧 Tab 编排 */}
+          <Tabs defaultValue="progress">
+            <TabsList className="w-full">
+              <TabsTrigger value="progress" className="flex-1 gap-1.5">
+                <ListChecks className="size-4" />
+                {t("tabProgress")}
+              </TabsTrigger>
+              {/* Story 3.7~3.10 将在此处增加更多 Tab（文档/界面/E2B沙箱） */}
+              <TabsTrigger value="settings" className="flex-1 gap-1.5">
+                <Settings className="size-4" />
+                {t("tabSettings")}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="progress" className="mt-4">
+              {/* Story 3.7 将在此处实现需求进度 Tab 内容 */}
               <p className="text-muted-foreground text-sm">{t("rightPanelPlaceholder")}</p>
-            </div>
-          )
+            </TabsContent>
+            <TabsContent value="settings" className="mt-4">
+              <WorkspaceSettingsPanel
+                githubAuthorized={githubAuthorized}
+                githubRepoCount={githubRepoCount}
+              />
+            </TabsContent>
+          </Tabs>
         }
       />
     </>
