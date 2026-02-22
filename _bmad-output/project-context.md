@@ -3,7 +3,7 @@ project_name: 'ai-builder'
 user_name: 'Arksou'
 date: '2026-02-10'
 status: 'complete'
-rule_count: 42
+rule_count: 43
 section_count: 6
 optimized_for_llm: true
 source_framework_version: 'arksou-kernel-framework v0.4.0'
@@ -258,6 +258,16 @@ get_clerk_account, CurrentClerkAccount = create_clerk_deps(
 2. ① 根路径/认证页 → `auth()` 检查 → 已登录跳 `/dashboard`
 3. ② API 路由 → 未登录返回 `401 JSON`
 4. ③ 其余页面 → `auth.protect()` (自动重定向 sign-in)
+
+**Locale Path Guardrail (Must Follow)**:
+- 项目采用 `next-intl` `localePrefix: "never"`，禁止在中间件/路由匹配中硬编码 `/en`、`/zh-CN` 等显式语言路径。
+- 认证页与根路径判断必须基于“去除 locale 前缀后的规范化路径”（例如仅判断 `/sign-in`、`/sign-up`、`/`），并从 `routing.locales` 动态推导 locale 集合。
+- 新增语言时不得改动硬编码路径字符串；只允许更新 `routing.locales` 与对应 messages，避免认证重定向回环。
+
+**Frontend UI/Interaction Guardrail (Must Follow)**:
+- 所有前端界面与交互实现，必须严格遵循 `_bmad-output/planning-artifacts/ux-design-specification.md`。
+- 在需求分析、交互设计、组件实现、测试验收全流程中，必须使用并对照 `ui-ux-pro-max` 规范清单。
+- 任一 UI/UX 规范未满足时，不得标记故事完成或进入下一阶段。
 
 **Auth Route Group**: `(auth)/sign-in`, `(auth)/sign-up`
 

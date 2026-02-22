@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Open_Sans, Poppins } from "next/font/google";
-import { NextIntlClientProvider, useMessages } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { routing } from "@/i18n/routing";

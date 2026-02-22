@@ -60,5 +60,50 @@
   "languageSwitcher": {
     "switchToEn": "EN",
     "switchToZh": "中文"
+  },
+  "workspaceShell": {
+    "navigation": "Workspace Navigation",
+    "collapseLeftPanel": "Collapse left panel",
+    "expandLeftPanel": "Expand left panel",
+    "leftPanelPrimaryAction": "Current Story",
+    "leftPanelSecondaryAction": "Execution Checklist",
+    "centerPanelAction": "Next Step",
+    "rightPanelPlaceholder": "Right panel content placeholder",
+    "settings": "Settings",
+    "workspaceSettings": "Workspace Settings",
+    "closeSettings": "Close settings",
+    "codeSources": "Code Sources",
+    "github": "GitHub",
+    "githubAuthStatus": "Authorization Status",
+    "githubRepoCount": "Linked Repositories",
+    "githubManage": "Manage",
+    "notAuthorized": "Not Authorized",
+    "authorized": "Authorized",
+    "noRepos": "No repositories",
+    "error": {
+      "loadFailed": "Load Failed",
+      "loadFailedDescription": "Unable to load workspace data. Please check your network connection and try again.",
+      "retry": "Retry"
+    },
+    "desktopOnly": "This workspace requires a desktop browser (screen width ≥ 1024px). Please switch to a larger screen."
+  },
+  "workflowSteps": {
+    "panelTitle": "Workflow Steps",
+    "stepLabel": "Step {order} of {total}",
+    "steps": {
+      "drafting": "Drafting",
+      "uxDesign": "UX Design",
+      "uiPreview": "UI Preview",
+      "docReady": "Doc Ready",
+      "developing": "Developing",
+      "validating": "Validating",
+      "validated": "Validated",
+      "prPending": "PR Submission"
+    },
+    "status": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed"
+    }
   }
 }

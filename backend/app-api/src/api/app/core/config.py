@@ -5,10 +5,14 @@
 """
 
 from functools import lru_cache
+from pathlib import Path
 
 from arksou.kernel.framework.app import BaseAppSettings
 from arksou.kernel.framework.auth.clerk import ClerkSettings
 from pydantic import Field
+
+# 固定读取 backend/.env，避免受启动工作目录影响。
+BACKEND_ENV_FILE = Path(__file__).resolve().parents[5] / ".env"
 
 
 class Settings(BaseAppSettings):
@@ -30,13 +34,13 @@ class Settings(BaseAppSettings):
 @lru_cache
 def get_settings() -> Settings:
     """获取缓存的应用配置实例。"""
-    return Settings()
+    return Settings(_env_file=BACKEND_ENV_FILE)
 
 
 @lru_cache
 def get_clerk_settings() -> ClerkSettings:
     """获取缓存的 Clerk 配置实例。"""
-    return ClerkSettings()
+    return ClerkSettings(_env_file=BACKEND_ENV_FILE)
 
 
 settings = get_settings()

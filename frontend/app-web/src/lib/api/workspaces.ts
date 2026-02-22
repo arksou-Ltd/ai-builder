@@ -57,3 +57,17 @@ export async function deleteWorkspace(
     getToken,
   );
 }
+
+/**
+ * 获取工作空间详情
+ */
+export async function getWorkspace(
+  id: string,
+  getToken: () => Promise<string | null>,
+): Promise<WorkspaceResponse> {
+  return apiRequest<WorkspaceResponse>(
+    `/api/v1/workspaces/${id}`,
+    { method: "GET" },
+    getToken,
+  );
+}

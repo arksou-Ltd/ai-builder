@@ -60,6 +60,29 @@ async def list_workspaces(
     return Result.success(data=workspaces)
 
 
+@router.get(
+    "/{workspace_id}",
+    summary="获取工作空间详情",
+    description="返回当前用户可访问的单个工作空间详情。",
+)
+async def get_workspace(
+    account: CurrentClerkAccount,
+    db: DbSession,
+    workspace_id: int = Path(gt=0),
+) -> Result[WorkspaceResponse]:
+    """获取工作空间详情。"""
+    account_service = AccountService(db)
+    internal_account_id = await account_service.resolve_by_clerk_id(
+        account.clerk_account_id
+    )
+    if internal_account_id is None:
+        raise NotFoundException("工作空间不存在")
+
+    service = WorkspaceService(db)
+    workspace = await service.get_workspace(workspace_id, internal_account_id)
+    return Result.success(data=workspace)
+
+
 @router.delete(
     "/{workspace_id}",
     summary="删除工作空间",

@@ -1,4 +1,4 @@
-# generated: 2026-02-05
+# generated: 2026-02-14
 # project: ai-builder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-05
+generated: 2026-02-14
 project: ai-builder
 project_key: NOKEY
 tracking_system: file-system
@@ -54,3 +54,19 @@ development_status:
   2-3-workspace-create: done
   2-4-workspace-delete: done
   epic-2-retrospective: done
+
+  # Epic 3: Workspace Layout & Interaction
+  epic-3: in-progress
+  3-1-workspace-shell-three-panel-layout: done
+  3-2-workflow-steps-panel: in-progress
+  3-3-epic-story-navigation-tree: backlog
+  3-4-conversation-flow-in-flow-updates: backlog
+  3-5-input-area-next-step-guidance: backlog
+  3-6-right-panel-tab-orchestration: backlog
+  3-7-progress-tab: backlog
+  3-8-docs-tab: backlog
+  3-9-ui-tab: backlog
+  3-10-e2b-sandbox-tab: backlog
+  3-11-cross-region-state-sync: backlog
+  3-12-global-accessibility-feedback-baseline: backlog
+  epic-3-retrospective: optional

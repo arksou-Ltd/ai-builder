@@ -426,6 +426,17 @@ class TestUnauthorizedAccess:
         assert response.status_code == 401
         application.dependency_overrides.clear()
 
+    async def test_get_detail_without_auth_returns_401(self, test_session_factory):
+        """未登录获取工作空间详情应返回 401。"""
+        application = _make_app(test_session_factory)
+
+        transport = ASGITransport(app=application)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+            response = await c.get("/api/v1/workspaces/12345")
+
+        assert response.status_code == 401
+        application.dependency_overrides.clear()
+
 
 # --- 用户隔离测试 ---
 
@@ -560,6 +571,66 @@ class TestListWorkspaces:
 
         assert count == 0, "列表查询不应产生 auth_accounts 写入副作用"
         application.dependency_overrides.clear()
+
+
+class TestGetWorkspaceDetail:
+    """工作空间详情查询测试。"""
+
+    async def test_get_workspace_detail_success(self, client: httpx.AsyncClient):
+        """详情接口应返回当前用户的工作空间。"""
+        name = _unique_name("detail-ok")
+        create_resp = await client.post("/api/v1/workspaces", json={"name": name})
+        assert create_resp.status_code == 200
+        workspace_id = create_resp.json()["data"]["id"]
+
+        response = await client.get(f"/api/v1/workspaces/{workspace_id}")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["code"]["value"] == 2000000
+        assert payload["data"]["id"] == workspace_id
+        assert payload["data"]["name"] == name
+
+    async def test_get_workspace_detail_not_found_returns_404(
+        self,
+        client: httpx.AsyncClient,
+    ):
+        """不存在的工作空间详情应返回 404。"""
+        response = await client.get("/api/v1/workspaces/999999999999999")
+        assert response.status_code == 404
+        payload = response.json()
+        assert payload["code"]["value"] == 4040000
+
+    async def test_get_workspace_detail_non_integer_id_returns_422(
+        self,
+        client: httpx.AsyncClient,
+    ):
+        """非整数 ID 查询应返回 422。"""
+        response = await client.get("/api/v1/workspaces/abc")
+        assert response.status_code == 422
+
+    async def test_get_workspace_detail_cross_user_returns_404(
+        self,
+        test_session_factory,
+        clerk_account_a,
+        clerk_account_b,
+    ):
+        """用户 B 不能读取用户 A 的工作空间详情。"""
+        ws_name = _unique_name("detail-iso")
+
+        app_a = _make_app(test_session_factory, clerk_account_a)
+        transport_a = ASGITransport(app=app_a)
+        async with httpx.AsyncClient(transport=transport_a, base_url="http://test") as client_a:
+            created = await client_a.post("/api/v1/workspaces", json={"name": ws_name})
+            assert created.status_code == 200
+            workspace_id = created.json()["data"]["id"]
+        app_a.dependency_overrides.clear()
+
+        app_b = _make_app(test_session_factory, clerk_account_b)
+        transport_b = ASGITransport(app=app_b)
+        async with httpx.AsyncClient(transport=transport_b, base_url="http://test") as client_b:
+            response = await client_b.get(f"/api/v1/workspaces/{workspace_id}")
+            assert response.status_code == 404
+        app_b.dependency_overrides.clear()
 
 
 # --- 删除测试 ---

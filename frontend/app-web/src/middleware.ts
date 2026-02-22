@@ -8,13 +8,35 @@ import { routing } from "./i18n/routing";
  */
 const intlMiddleware = createIntlMiddleware(routing);
 
-/**
- * 认证页面匹配器（登录/注册页面）
- */
-const isAuthRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-]);
+const localeSet = new Set(routing.locales);
+
+function stripLocalePrefix(pathname: string): string {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) {
+    return "/";
+  }
+
+  const [first, ...rest] = segments;
+  if (!localeSet.has(first as (typeof routing.locales)[number])) {
+    return pathname;
+  }
+
+  return rest.length > 0 ? `/${rest.join("/")}` : "/";
+}
+
+function isAuthPath(pathname: string): boolean {
+  const normalized = stripLocalePrefix(pathname);
+  return (
+    normalized === "/sign-in" ||
+    normalized.startsWith("/sign-in/") ||
+    normalized === "/sign-up" ||
+    normalized.startsWith("/sign-up/")
+  );
+}
+
+function isRootPath(pathname: string): boolean {
+  return stripLocalePrefix(pathname) === "/";
+}
 
 /**
  * API 路由匹配器
@@ -27,11 +49,6 @@ const isApiRoute = createRouteMatcher(["/(api|trpc)(.*)"]);
 const isWebhookRoute = createRouteMatcher(["/api/v1/webhooks/(.*)"]);
 
 /**
- * 根路径匹配器
- */
-const isRootPath = createRouteMatcher(["/"]);
-
-/**
  * Clerk + next-intl 组合中间件
  *
  * 路由分支策略：
@@ -41,6 +58,10 @@ const isRootPath = createRouteMatcher(["/"]);
  * ③ 其余页面路由：auth.protect() 保护 + intlMiddleware 处理 locale
  */
 export default clerkMiddleware(async (auth, request) => {
+  const pathname = request.nextUrl.pathname;
+  const authPath = isAuthPath(pathname);
+  const rootPath = isRootPath(pathname);
+
   // ⓪ Webhook 路由：直接放行，不做用户态 auth 校验
   // 安全由后端 Svix 签名验证保障
   if (isWebhookRoute(request)) {
@@ -67,7 +88,7 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   // ① 根路径 & 认证页面：检查是否已登录 → 跳转 dashboard
-  if (isRootPath(request) || isAuthRoute(request)) {
+  if (rootPath || authPath) {
     const { userId } = await auth();
     if (userId) {
       const url = request.nextUrl.clone();
@@ -76,7 +97,7 @@ export default clerkMiddleware(async (auth, request) => {
     }
 
     // 根路径未登录 → 重定向到 sign-in
-    if (isRootPath(request) && !isAuthRoute(request)) {
+    if (rootPath && !authPath) {
       const url = request.nextUrl.clone();
       url.pathname = "/sign-in";
       return NextResponse.redirect(url);

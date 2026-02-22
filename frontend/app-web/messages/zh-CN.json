@@ -60,5 +60,50 @@
   "languageSwitcher": {
     "switchToEn": "EN",
     "switchToZh": "中文"
+  },
+  "workspaceShell": {
+    "navigation": "工作空间导航",
+    "collapseLeftPanel": "折叠左侧面板",
+    "expandLeftPanel": "展开左侧面板",
+    "leftPanelPrimaryAction": "当前故事",
+    "leftPanelSecondaryAction": "执行清单",
+    "centerPanelAction": "下一步",
+    "rightPanelPlaceholder": "右侧面板内容占位",
+    "settings": "设置",
+    "workspaceSettings": "工作空间设置",
+    "closeSettings": "关闭设置",
+    "codeSources": "代码源",
+    "github": "GitHub",
+    "githubAuthStatus": "授权状态",
+    "githubRepoCount": "已绑定仓库",
+    "githubManage": "管理",
+    "notAuthorized": "未授权",
+    "authorized": "已授权",
+    "noRepos": "暂无仓库",
+    "error": {
+      "loadFailed": "加载失败",
+      "loadFailedDescription": "无法加载工作空间数据，请检查网络连接后重试",
+      "retry": "重试"
+    },
+    "desktopOnly": "工作空间需要桌面浏览器（屏幕宽度 ≥ 1024px），请切换到更大的屏幕。"
+  },
+  "workflowSteps": {
+    "panelTitle": "工作流步骤",
+    "stepLabel": "步骤 {order}，共 {total} 步",
+    "steps": {
+      "drafting": "需求撰写",
+      "uxDesign": "UX 设计",
+      "uiPreview": "UI 预览",
+      "docReady": "文档就绪",
+      "developing": "代码开发",
+      "validating": "代码验证",
+      "validated": "验证通过",
+      "prPending": "PR 提交"
+    },
+    "status": {
+      "pending": "待执行",
+      "inProgress": "进行中",
+      "completed": "已完成"
+    }
   }
 }

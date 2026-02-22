@@ -154,9 +154,9 @@ FR38: Epic 9 - Code Delivery Automation（PR 关联 Epic/Story 信息）
 FR39: Epic 9 - Code Delivery Automation（PR 变更摘要）
 FR40: Epic 9 - Code Delivery Automation（PR 上下文信息）
 FR41: Epic 9 - Code Delivery Automation（多仓库 PR 交叉引用）
-FR42: Epic 3 - Workflow Progress & UX Transparency（步骤面板与状态）
-FR43: Epic 3 - Workflow Progress & UX Transparency（右侧操作区随步骤切换）
-FR44: Epic 3 - Workflow Progress & UX Transparency（下一步指引）
+FR42: Epic 3 - Workspace Layout & Interaction（左侧步骤面板与状态）
+FR43: Epic 3 - Workspace Layout & Interaction（右侧区域按阶段动态切换）
+FR44: Epic 3 - Workspace Layout & Interaction（下一步指引）
 FR45: Epic 6 - Epic Definition & Management（创建 Epic 时自然语言描述）
 FR46: Epic 6 - Epic Definition & Management（主动引导补充细节）
 FR47: Epic 6 - Epic Definition & Management（确认/修改 Epic 摘要）
@@ -164,11 +164,11 @@ FR48: Epic 7 - Story Authoring + E2B Sandbox Sync（对话调整 Story 内容）
 FR49: Epic 8 - Story Execution（遇到问题补充上下文）
 FR50: Epic 8 - Story Execution（提供修复建议）
 FR51: Epic 8 - Story Execution（多轮对话）
-FR52: Epic 3 - Workflow Progress & UX Transparency（工作流进度可视化）
-FR53: Epic 3 - Workflow Progress & UX Transparency（Story 状态展示）
+FR52: Epic 3 - Workspace Layout & Interaction（工作流进度可视化）
+FR53: Epic 3 - Workspace Layout & Interaction（Story 状态展示）
 FR54: Epic 8 - Story Execution（Review 结果与问题描述）
 FR55: Epic 9 - Code Delivery Automation（展示 PR 链接）
-FR56: Epic 3 - Workflow Progress & UX Transparency（自动操作实时进度指示）
+FR56: Epic 3 - Workspace Layout & Interaction（自动操作实时进度指示）
 
 ## Epic List
 
@@ -180,8 +180,8 @@ FR56: Epic 3 - Workflow Progress & UX Transparency（自动操作实时进度指
 用户可通过 Clerk 完成注册/登录（邮箱、Google、GitHub Account）与登出，并可创建/删除工作空间。
 **FRs covered:** FR1, FR3, FR4, FR8
 
-### Epic 3: Workflow Progress & UX Transparency
-提供步骤面板与状态（待执行/进行中/已完成）、右侧操作区随步骤切换、明确下一步指引，并展示 Story 状态、Review 结果入口与自动操作实时进度指示等，确保长时任务具备透明反馈；这是后续 Epic 在 UI 上可执行与可调试的基础体验框架。
+### Epic 3: Workspace Layout & Interaction
+以工作空间布局与交互为核心，建立“顶部导航 + 左侧双层区域（步骤面板 + Epic/Story 导航树）+ 中间对话 + 右侧四 Tab（需求进度/文档/界面/E2B 沙箱）”的统一工作区，确保长时任务可见、可控、可恢复。GitHub 采用“单账号授权 + 多仓库管理”的界面策略：统一在 Workspace Settings 提供授权与仓库管理入口，执行工作区仅做状态摘要与引导跳转。该 Epic 聚焦展示层与交互层，FR54（Review 结果）与 FR55（PR 链接）在本 Epic 仅提供入口展示，业务执行归属保持在 Epic 8 / Epic 9。
 **FRs covered:** FR42, FR43, FR44, FR52, FR53, FR56
 
 ### Epic 4: GitHub Authorization & Repo Linking (No Code Import)
@@ -357,66 +357,189 @@ So that 我的工作空间列表保持整洁。
 **And** 用户确认删除后 1 秒内从工作空间列表中移除，并将该工作空间标记为软删除（默认查询不可见）
 **And** 取消删除则工作空间保持不变
 
-## Epic 3: Workflow Progress & UX Transparency
+## Epic 3: Workspace Layout & Interaction
 
-提供步骤面板与状态（待执行/进行中/已完成）、右侧操作区随步骤切换、明确下一步指引，并展示 Story 状态与自动操作实时进度指示，确保长时任务具备透明反馈与可追踪性。
+以工作空间布局与交互为核心，建立“顶部导航 + 左侧双层区域（步骤面板 + Epic/Story 导航树）+ 中间对话 + 右侧四 Tab（需求进度/文档/界面/E2B 沙箱）”的统一工作区，确保长时任务可见、可控、可恢复。GitHub 采用“单账号授权 + 多仓库管理”的界面策略：统一在 Workspace Settings 提供授权与仓库管理入口，执行工作区仅做状态摘要与引导跳转。该 Epic 聚焦展示层与交互层，FR54（Review 结果）与 FR55（PR 链接）在本 Epic 仅提供入口展示，业务执行归属保持在 Epic 8 / Epic 9。
 
-### Story 3.1: 工作流步骤面板与状态可视化
+### Story 3.1: 工作空间壳层与三面板布局
 
 As a PM 用户,
-I want 在左侧看到完整工作流步骤和当前进度,
-So that 我可以随时知道当前所处阶段并判断整体推进情况。
+I want 工作空间页面提供稳定的三面板壳层布局,
+So that 我可以在一个固定结构中连续完成需求到交付的全过程。
+
+**Acceptance Criteria:**
+
+**Given** 用户进入工作空间执行页
+**When** 页面首屏加载完成
+**Then** 页面显示顶部导航、左侧区域、中间对话区、右侧区域的三面板结构
+**And** 在 1024px 及以上宽度下布局稳定，左/中/右区域分别可见且不互相覆盖
+**And** 小屏桌面模式支持左侧区域折叠与展开，展开后焦点顺序与视觉顺序一致
+**And** 页面异常时展示可恢复错误提示并提供“重试”入口
+**And** 顶部导航提供 Workspace Settings 入口，进入后可见 `Code Sources > GitHub` 区块（单账号授权状态 + 已绑定仓库数量 + 管理入口）
+
+### Story 3.2: 左侧区域 A（工作流步骤面板）
+
+As a PM 用户,
+I want 在左侧看到完整工作流步骤与当前状态,
+So that 我可以明确当前阶段和整体推进节奏。
 
 **Acceptance Criteria:**
 
 **Given** 用户已进入需求执行工作区
-**When** 页面完成初始化
-**Then** 左侧步骤面板展示 8 个核心步骤，且每个步骤有状态图标（待执行灰色/进行中蓝色/已完成绿色）
-**And** 当前步骤始终高亮显示，已完成步骤显示勾选标记
-**And** 刷新页面后可从持久化状态恢复步骤进度，当前步骤与已完成状态不丢失
-**And** 在 1024px 及以上桌面宽度下三面板布局稳定可用（左侧步骤面板可见）
+**When** 页面初始化或状态更新
+**Then** 步骤面板展示 8 个核心步骤及状态图标（待执行/进行中/已完成）
+**And** 当前步骤高亮显示，已完成步骤显示勾选标记
+**And** 步骤状态变化后 1 秒内同步到界面
+**And** 刷新页面后可恢复当前步骤与已完成状态，不出现状态丢失
 
-### Story 3.2: 右侧操作区域动态切换
+### Story 3.3: 左侧区域 B（Epic/Story 导航树）
 
 As a PM 用户,
-I want 右侧区域随当前步骤自动切换到对应内容,
-So that 我不需要手动寻找当前阶段应查看的信息与操作。
+I want 在左侧查看并切换 Epic/Story 导航树,
+So that 我可以快速定位当前执行对象并了解各 Story 状态。
 
 **Acceptance Criteria:**
 
-**Given** 用户在任意工作流步骤中
-**When** 当前步骤发生切换（自动或手动）
-**Then** 右侧操作区域在 1 秒内切换到对应视图（对话框/状态卡片/操作按钮）
-**And** 切换后默认聚焦当前步骤最关键操作（如继续、确认、生成）
-**And** 切换过程提供 150-300ms 过渡反馈且不阻塞用户交互
-**And** 切换失败时在当前区域显示可恢复错误提示（包含“重试”入口）
+**Given** 当前工作空间存在至少 1 个 Epic
+**When** 用户展开 Epic 节点
+**Then** 展示该 Epic 下 Story 列表及状态标识（待开发/开发中/Review中/Done）
+**And** 当前 Story 具备明确选中态，切换后中间与右侧区域同步更新
+**And** 未解锁 Story 显示禁用样式，避免跳步执行
+**And** 导航树支持展开/折叠，交互过渡在 150-300ms 内完成
 
-### Story 3.3: 下一步指引与 Story 状态展示
+### Story 3.4: 中间区域 A（对话流与 In-flow Updates）
 
 As a PM 用户,
-I want 在每个步骤都看到明确下一步以及当前 Story 状态,
-So that 我可以低成本推进流程并及时发现阻塞点。
+I want 在中间区域持续看到 AI 对话与过程更新,
+So that 我可以理解系统行为并在关键节点及时介入。
 
 **Acceptance Criteria:**
 
-**Given** 用户位于任一流程步骤
-**When** 步骤内容渲染完成
-**Then** 步骤底部展示“下一步”按钮或同等提示文案，且内容与当前步骤上下文一致
-**And** Story 列表或卡片显示状态标签（待开发/开发中/Review中/Done），并使用灰/蓝/橙/绿颜色区分
-**And** 状态变化后 1 秒内同步到界面，不需要用户手动刷新
-**And** 错误状态提示使用 `role="alert"` 或 `aria-live`，确保可访问性与可感知性
+**Given** 系统处于任意执行阶段
+**When** AI 产生消息或进度更新
+**Then** 中间对话流实时追加消息并保持时间顺序
+**And** 自动执行阶段的进度更新以 In-flow Updates 形式写入对话流
+**And** 流式输出支持逐步渲染，完成后可折叠思考过程
+**And** 对话区域使用 `role="log"` 与 `aria-live`，保证可访问性播报
 
-### Story 3.4: 自动操作实时进度指示
+### Story 3.5: 中间区域 B（输入区与下一步指引）
 
 As a PM 用户,
-I want 在开发/Review/修复自动执行时看到实时进度,
-So that 我可以理解系统正在做什么并在异常时及时干预。
+I want 在输入区获得明确的下一步操作引导,
+So that 我可以低成本推进流程并减少误操作。
 
 **Acceptance Criteria:**
 
-**Given** 系统触发自动操作（开发、Review 或修复）
-**When** 任务进入执行态
-**Then** 页面展示进度条或加载动画，并每 5 秒更新一次状态文字
-**And** 超过 300ms 的异步等待展示 Skeleton 或 Spinner，避免“无反馈”状态
-**And** 进度更新同时写入对话流（In-flow Updates），使用户可在对话上下文中追踪阶段变化
-**And** 自动操作失败时展示明确失败原因与可执行恢复路径（如“重试”“前往设置”）
+**Given** 用户位于任一工作流步骤
+**When** 当前步骤内容渲染完成
+**Then** 输入区附近展示“下一步”按钮或同等提示文案，且与当前上下文一致
+**And** 当步骤需要用户输入时，输入框与发送动作可用并给出格式约束提示
+**And** 当步骤为系统自动执行时，输入区显示“可补充上下文”的辅助入口
+**And** 指引执行失败时给出明确原因与恢复路径（重试/返回上一步）
+**And** 当检测到“未授权 GitHub 单账号”或“已绑定仓库数为 0”时，展示阻断提示并提供“去工作空间设置完成连接”的单一入口
+
+### Story 3.6: 右侧区域容器与四 Tab 切换编排
+
+As a PM 用户,
+I want 右侧区域固定为四个 Tab 并按阶段自动聚焦,
+So that 我可以在不同任务阶段快速获取最相关信息。
+
+**Acceptance Criteria:**
+
+**Given** 用户位于工作空间执行页
+**When** 工作流阶段发生变化
+**Then** 右侧区域保持 4 个 Tab：需求进度、文档、界面、E2B 沙箱
+**And** 系统按阶段自动切换默认 Tab，用户仍可手动切换
+**And** Tab 切换在 1 秒内完成并提供 150-300ms 过渡反馈
+**And** 切换失败时保留当前可用内容并展示“重试”入口
+
+### Story 3.7: 右侧 Tab（需求进度）
+
+As a PM 用户,
+I want 在“需求进度”Tab 查看结构化进度与状态,
+So that 我可以追踪 Epic/Story 推进和验证进展。
+
+**Acceptance Criteria:**
+
+**Given** 用户打开“需求进度”Tab
+**When** 状态数据加载完成
+**Then** 展示 Epic/Story 导航树、当前 Agent 状态、验证进度分阶段信息
+**And** Story 状态变化后 1 秒内同步到该 Tab 视图
+**And** 提供 FR54 与 FR55 的只读入口展示（Review 结果入口、PR 链接入口）
+**And** 点击上述入口后跳转到对应执行域页面或弹层，执行逻辑仍由 Epic 8 / Epic 9 负责
+**And** 同一区域展示 GitHub 连接摘要（当前授权账号、授权状态、已绑定仓库数）并提供“管理仓库”跳转到 Workspace Settings 的入口
+
+### Story 3.8: 右侧 Tab（文档）
+
+As a PM 用户,
+I want 在“文档”Tab 查看并调整 Epic/Story 文档,
+So that 我可以在执行过程中保持需求文档与实现上下文一致。
+
+**Acceptance Criteria:**
+
+**Given** 用户打开“文档”Tab
+**When** 文档数据加载成功
+**Then** 展示改动汇总卡片与 Epic→Story 文档树
+**And** 文档详情支持“渲染视图 / Markdown 源码”切换
+**And** 用户保存修改后 1 秒内回写列表并更新改动摘要
+**And** 保存失败时提示具体原因与可执行恢复动作
+
+### Story 3.9: 右侧 Tab（界面）
+
+As a PM 用户,
+I want 在“界面”Tab 查看 UI 预览与视口切换,
+So that 我可以在不离开工作流的前提下确认界面效果。
+
+**Acceptance Criteria:**
+
+**Given** 当前 Story 涉及界面交付
+**When** 用户打开“界面”Tab
+**Then** 支持 Desktop/Tablet/Mobile 视口切换并实时更新预览区域
+**And** 界面状态完整覆盖 empty/generating/preview/confirmed
+**And** 提供“重新生成/确认界面/新窗口打开”操作入口
+**And** 当前 Story 不涉及界面时展示可理解的空状态说明
+
+### Story 3.10: 右侧 Tab（E2B 沙箱）
+
+As a PM 用户,
+I want 在“E2B 沙箱”Tab 查看环境状态与运行输出,
+So that 我可以判断自动执行是否正常并在异常时快速恢复。
+
+**Acceptance Criteria:**
+
+**Given** 用户打开“E2B 沙箱”Tab
+**When** 沙箱状态变化
+**Then** 显示运行中/启动中/已停止/错误等状态标识
+**And** 展示终端输出与应用预览区域
+**And** 提供重启、复制日志、新窗口打开等操作
+**And** 错误态必须给出明确原因和恢复动作（重启/重试）
+
+### Story 3.11: 跨区域状态同步与自动收敛
+
+As a PM 用户,
+I want 三个区域中的状态保持一致并自动收敛,
+So that 我不会看到“已完成却仍显示进行中”的冲突信息。
+
+**Acceptance Criteria:**
+
+**Given** 工作流状态在任一区域发生变化
+**When** 状态事件写入系统
+**Then** 左侧步骤、左侧导航树、中间对话、右侧 Tab 在 1 秒内完成一致性更新
+**And** 刷新页面后恢复到最近一次持久化状态
+**And** 当 Story 全部达到完成条件时，Epic 状态自动收敛为完成
+**And** 状态收敛过程记录审计信息（触发源、前后状态、时间戳）
+
+### Story 3.12: 全局可访问性与反馈基线
+
+As a PM 用户,
+I want 所有区域具备一致的可访问性与反馈体验,
+So that 在加载、失败、切换场景下都能清楚感知系统状态。
+
+**Acceptance Criteria:**
+
+**Given** 用户通过键盘或读屏器操作工作空间页面
+**When** 执行导航、输入、切换、提交等交互
+**Then** 所有关键控件支持 Tab/Enter/Escape 并有可见 focus 状态
+**And** 错误提示使用 `role="alert"` 或 `aria-live`，避免静默失败
+**And** 超过 300ms 的异步等待展示 Skeleton 或 Spinner
+**And** 页面在 `prefers-reduced-motion` 下自动降低非必要动效

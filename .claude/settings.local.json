@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "mcp__mcphub__tavily-mcp-tavily_search"
+      "mcp__mcphub__tavily-mcp-tavily_search",
+      "Bash(find:*)"
     ]
   }
 }

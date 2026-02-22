@@ -9,6 +9,7 @@
 
 import { MoreHorizontal, Trash2, Box } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ interface WorkspaceCardProps {
 export function WorkspaceCard({ workspace, onDeleteClick }: WorkspaceCardProps) {
   const t = useTranslations("workspace");
   const locale = useLocale();
+  const router = useRouter();
 
   const formattedCreatedDate = new Date(workspace.createdAt).toLocaleDateString(locale, {
     year: "numeric",
@@ -86,7 +88,12 @@ export function WorkspaceCard({ workspace, onDeleteClick }: WorkspaceCardProps) 
 
       <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-4">
         <span className="text-xs font-medium text-muted-foreground">{t("lastUpdated", { date: formattedUpdatedDate })}</span>
-        <Button variant="link" size="sm" className="h-auto p-0 text-xs text-primary hover:no-underline opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="link"
+          size="sm"
+          className="h-auto p-0 text-xs text-primary hover:no-underline opacity-0 transition-opacity cursor-pointer group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          onClick={() => router.push(`/workspace/${workspace.id}`)}
+        >
           {t("enterSpace")} &rarr;
         </Button>
       </div>

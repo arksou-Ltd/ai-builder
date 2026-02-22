@@ -99,6 +99,31 @@ class WorkspaceService:
 
         return [WorkspaceResponse.model_validate(ws) for ws in workspaces]
 
+    async def get_workspace(self, workspace_id: int, account_id: int) -> WorkspaceResponse:
+        """获取单个工作空间详情。
+
+        Args:
+            workspace_id: 工作空间 ID（雪花 ID）
+            account_id: 内部账号 ID（auth_accounts.id），用于所有权验证
+
+        Returns:
+            WorkspaceResponse: 工作空间详情
+
+        Raises:
+            NotFoundException: 工作空间不存在或不属于当前用户
+        """
+        stmt = select(Workspace).where(
+            Workspace.id == workspace_id,
+            Workspace.account_id == account_id,
+        )
+        result = await self._db.execute(stmt)
+        workspace = result.scalar_one_or_none()
+
+        if workspace is None:
+            raise NotFoundException("工作空间不存在")
+
+        return WorkspaceResponse.model_validate(workspace)
+
     async def delete_workspace(self, workspace_id: int, account_id: int) -> None:
         """软删除工作空间。
 
