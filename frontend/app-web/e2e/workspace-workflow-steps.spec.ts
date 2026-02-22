@@ -48,8 +48,18 @@ async function createAndNavigateToWorkspace(page: import("@playwright/test").Pag
 
   const createButton = page.getByRole("button", { name: TEXT.createWorkspace }).first();
   await createButton.click();
-  await page.getByPlaceholder(TEXT.workspaceNamePlaceholder).fill(uniqueName);
-  await page.getByRole("button", { name: TEXT.createAction }).click();
+
+  const createDialog = page.getByRole("dialog", { name: TEXT.createWorkspace });
+  await expect(createDialog).toBeVisible({ timeout: 10_000 });
+
+  const nameInput = createDialog.getByPlaceholder(TEXT.workspaceNamePlaceholder);
+  await nameInput.fill(uniqueName);
+  const typedValue = await nameInput.evaluate(
+    (el) => (el as HTMLInputElement).value,
+  );
+  expect(typedValue).toBe(uniqueName);
+
+  await createDialog.getByRole("button", { name: TEXT.createAction }).click();
   await expect(page.getByText(uniqueName)).toBeVisible({ timeout: 10_000 });
 
   const card = page.locator(`[aria-label*="${uniqueName}"]`);
@@ -97,7 +107,7 @@ test.describe("工作流步骤面板", () => {
 
   let workspaceName: string;
 
-  t.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({ storageState: authFile });
     const page = await context.newPage();
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -113,7 +123,7 @@ test.describe("工作流步骤面板", () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.setViewportSi({ width: 1024, height: 800 });
+    await page.setViewportSize({ width: 1024, height: 800 });
   });
 
   test("AC1: 步骤面板展示 8 个核心步骤及状态图标", async ({ page }) => {
@@ -138,7 +148,7 @@ test.describe("工作流步骤面板", () => {
       "pr_pending",
     ];
 
-    for (const s of stepIds) {
+    for (const stepId of stepIds) {
       const stepItem = page.getByTestId(`workflow-step-${stepId}`);
       await expect(stepItem).toBeVisible();
     }
@@ -185,7 +195,7 @@ test.describe("工作流步骤面板", () => {
 
     // 通过 Zustand store 设置当前步骤为 developing（第 5 步）
     // 这会使前 4 步自动收敛为 completed
-    await page.evaluate((wsName) => {
+    await page.evaluate(() => {
       // 从 URL 提取 workspaceId
       const pathParts = window.location.pathname.split("/");
       const workspaceId = pathParts[pathParts.length - 1];
@@ -211,7 +221,7 @@ test.describe("工作流步骤面板", () => {
       };
 
       localStorage.setItem(storeKey, JSON.stringify(data));
-    }, workspaceName);
+    });
 
     // 刷新页面以从 localStorage 恢复状态
     await page.reload();
@@ -246,46 +256,51 @@ test.describe("工作流步骤面板", () => {
     const panel = page.getByTestId("workflow-steps-panel");
     await expect(panel).toBeVisible();
 
-    // 记录开始时间，通过 localStorage 触发状态变更
-    const syncTime = await page.evaluate(() => {
-      const startTime = performance.now();
+    // 在浏览器上下文内计时，避免将 Playwright RPC 往返耗时混入 SLA 统计
+    const elapsedMs = await page.evaluate(async () => {
+      const target = document.querySelector<HTMLElement>(
+        "[data-testid='workflow-step-validating']",
+      );
+      if (!target) return Number.POSITIVE_INFINITY;
 
-      const pathParts = window.location.pathname.split("/");
-      const workspaceId = pathParts[pathParts.length - 1];
+      const startedAt = performance.now();
 
-      const storeKey = "ai-builder-workflow-steps";
-      const stored = localStorage.getItem(storeKey);
-      const data = stored ? JSON.parse(stored) : { state: { workspaces: {} }, version: 0 };
+      return await new Promise<number>((resolve) => {
+        const readStatus = () => target.getAttribute("data-step-status");
+        const finish = () => resolve(performance.now() - startedAt);
 
-      data.state.workspaces[workspaceId] = {
-        steps: [
-          { stepId: "drafting", status: "completed" },
-          { stepId: "ux_design", status: "completed" },
-          { stepId: "ui_preview", status: "completed" },
-          { stepId: "doc_ready", status: "completed" },
-  { stepId: "developing", status: "completed" },
-          { stepId: "validating", status: "in_progress" },
-          { stepId: "validated", status: "pending" },
-          { stepId: "pr_pending", status: "pending" },
-        ],
-        currentStepId: "validating",
-        version: 1,
-      };
+        const observer = new MutationObserver(() => {
+          if (readStatus() === "in_progress") {
+            observer.disconnect();
+            finish();
+          }
+        });
 
-      localStorage.setItem(storeKey, JSON.stringify(data));
+        observer.observe(target, {
+          attributes: true,
+          attributeFilter: ["data-step-status"],
+        });
 
-      // 触发 storage 事件以通知 Zustand
-      window.dispatchEvent(new StorageEvent("storage", {
-        key: storeKey,
-        newValue: JSON.stringify(data),
-      }));
+        window.dispatchEvent(
+          new CustomEvent("workflow.step", {
+            detail: { step: "validating", status: "in_progress" },
+          }),
+        );
 
-      return startTime;
+        if (readStatus() === "in_progress") {
+          observer.disconnect();
+          finish();
+          return;
+        }
+
+        window.setTimeout(() => {
+          observer.disconnect();
+          resolve(Number.POSITIVE_INFINITY);
+        }, 1_000);
+      });
     });
 
-    // 刷新以确保状态同步
-    await page.reload();
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    expect(elapsedMs).toBeLessThanOrEqual(1_000);
 
     // 验证 validating 步骤变为 in_progress
     const validatingStep = page.getByTestId("workflow-step-validating");
@@ -295,7 +310,9 @@ test.describe("工作流步骤面板", () => {
 
     // 验证 developing 步骤变为 completed
     const developingStep = page.getByTestId("workflow-step-developing");
-    await expect(developingStep).toHaveAttribute("data-step-status", "completed");
+    await expect(developingStep).toHaveAttribute("data-step-status", "completed", {
+      timeout: 1_000,
+    });
   });
 
   test("AC4: 刷新恢复当前步骤与已完成状态", async ({ page }) => {
@@ -328,7 +345,7 @@ test.describe("工作流步骤面板", () => {
       localStorage.setItem(storeKey, JSON.stringify(data));
     });
 
-    // 执行浏览器
+    // 执行浏览器刷新
     await page.reload();
     await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
@@ -345,7 +362,7 @@ test.describe("工作流步骤面板", () => {
       "completed",
     );
     await expect(page.getByTestId("workflow-step-ui_preview")).toHaveAttribute(
-      "data-s",
+      "data-step-status",
       "in_progress",
     );
     await expect(page.getByTestId("workflow-step-ui_preview")).toHaveAttribute(
@@ -358,6 +375,49 @@ test.describe("工作流步骤面板", () => {
     );
   });
 
+  test("AC4+: 持久化数据损坏时自动回退默认状态", async ({ page }) => {
+    await navigateToWorkspace(page, workspaceName);
+
+    await page.evaluate(() => {
+      const pathParts = window.location.pathname.split("/");
+      const workspaceId = pathParts[pathParts.length - 1];
+      const storeKey = "ai-builder-workflow-steps";
+      const stored = localStorage.getItem(storeKey);
+      const data = stored ? JSON.parse(stored) : { state: { workspaces: {} }, version: 0 };
+
+      data.state.workspaces[workspaceId] = {
+        steps: [
+          { stepId: "drafting", status: "completed" },
+          { stepId: "ux_design", status: "broken_status" },
+          { stepId: "ui_preview", status: "pending" },
+          { stepId: "doc_ready", status: "pending" },
+          { stepId: "developing", status: "pending" },
+          { stepId: "validating", status: "pending" },
+          { stepId: "validated", status: "pending" },
+          { stepId: "pr_pending", status: "pending" },
+        ],
+        currentStepId: "unknown_step",
+        version: 1,
+      };
+
+      localStorage.setItem(storeKey, JSON.stringify(data));
+    });
+
+    await page.reload();
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+
+    const panel = page.getByTestId("workflow-steps-panel");
+    await expect(panel).toBeVisible();
+
+    // 数据损坏后应回退默认状态：全部 pending，且无 aria-current
+    const allSteps = panel.locator("[data-testid^='workflow-step-']");
+    const count = await allSteps.count();
+    for (let i = 0; i < count; i++) {
+      await expect(allSteps.nth(i)).toHaveAttribute("data-step-status", "pending");
+    }
+    await expect(panel.locator("[aria-current='step']")).toHaveCount(0);
+  });
+
   test("AC4+: 不同工作空间状态隔离，不串状态", async ({ page }) => {
     await navigateToWorkspace(page, workspaceName);
 
@@ -367,7 +427,7 @@ test.describe("工作流步骤面板", () => {
       return pathParts[pathParts.length - 1];
     });
 
-    await page.evaluate((wsId) => {
+    await page.evaluate((wsId: string) => {
       const storeKey = "ai-builder-workflow-steps";
       const stored = localStorage.getItem(storeKey);
       const data = stored ? JSON.parse(stored) : { state: { workspaces: {} }, version: 0 };
@@ -379,7 +439,8 @@ test.describe("工作流步骤面板", () => {
           { stepId: "ux_design", status: "in_progress" },
           { stepId: "ui_preview", status: "pending" },
           { stepId: "doc_ready", status: "pending" },
-          { stepId: "developing", status: "pendin          { stepId: "validating", status: "pending" },
+          { stepId: "developing", status: "pending" },
+          { stepId: "validating", status: "pending" },
           { stepId: "validated", status: "pending" },
           { stepId: "pr_pending", status: "pending" },
         ],
@@ -409,7 +470,7 @@ test.describe("工作流步骤面板", () => {
     await page.reload();
     await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
-    // 验证当前工作空间显示的是自己的状态，不是的
+    // 验证当前工作空间显示的是自己的状态，不是其他工作空间的状态
     await expect(page.getByTestId("workflow-step-ux_design")).toHaveAttribute(
       "data-step-status",
       "in_progress",
@@ -426,12 +487,12 @@ test.describe("工作流步骤面板", () => {
     const panel = page.getByTestId("workflow-steps-panel");
     await expect(panel).toBeVisible();
 
-    // 验证面板使用 nav 语义标签
-    const nav = panel.locator("self::nav");
-    await expect(nav).toBeVisible();
+    // 验证面板使用 nav 语义标签（panel 本身是 nav 元素）
+    const tagName = await panel.evaluate((el) => el.tagName.toLowerCase());
+    expect(tagName).toBe("nav");
 
     // 验证面板有 aria-label
-   ariaLabel = await panel.getAttribute("aria-label");
+    const ariaLabel = await panel.getAttribute("aria-label");
     expect(ariaLabel).toBeTruthy();
 
     // 验证步骤列表使用有序列表
@@ -445,8 +506,8 @@ test.describe("工作流步骤面板", () => {
     expect(ariaLive).toBe("polite");
 
     // 验证当前步骤有 aria-current="step"（如果有当前步骤）
-    const stepsWithAriaCurrent = panel.locator("[aria-currtep']");
-    const count = await stepsthAriaCurrent.count();
+    const stepsWithAriaCurrent = panel.locator("[aria-current='step']");
+    const count = await stepsWithAriaCurrent.count();
     // 可能为 0（全部 pending）或 1（有当前步骤）
     expect(count).toBeLessThanOrEqual(1);
 
@@ -465,5 +526,55 @@ test.describe("工作流步骤面板", () => {
       const srOnly = step.locator(".sr-only");
       await expect(srOnly).toBeAttached();
     }
+
+    // 验证步骤项可通过键盘 Tab 聚焦（tabIndex=0）
+    const firstStep = page.getByTestId("workflow-step-drafting");
+    await firstStep.focus();
+    const focusedTag = await page.evaluate(() => {
+      const el = document.activeElement;
+      return el ? el.getAttribute("data-testid") : null;
+    });
+    expect(focusedTag).toBe("workflow-step-drafting");
+
+    // 验证通过 Tab 键可在步骤间依序导航
+    const stepIds = [
+      "drafting",
+      "ux_design",
+      "ui_preview",
+      "doc_ready",
+      "developing",
+      "validating",
+      "validated",
+      "pr_pending",
+    ];
+
+    // 聚焦第一个步骤后，Tab 键应按顺序切换到后续步骤
+    await firstStep.focus();
+    for (let i = 1; i < stepIds.length; i++) {
+      await page.keyboard.press("Tab");
+      const currentFocusTestId = await page.evaluate(() => {
+        const el = document.activeElement;
+        return el ? el.getAttribute("data-testid") : null;
+      });
+      expect(currentFocusTestId).toBe(`workflow-step-${stepIds[i]}`);
+    }
+
+    // 验证 focus-visible 样式可用（聚焦时有 outline/ring 样式）
+    await firstStep.focus();
+    // 使用键盘触发 focus-visible（Tab 到第一个步骤）
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    const outlineStyle = await firstStep.evaluate((el) => {
+      const styles = window.getComputedStyle(el);
+      return styles.outlineStyle;
+    });
+    // focus-visible 应设置 outline 或 ring（Tailwind ring 通过 box-shadow 实现）
+    const boxShadow = await firstStep.evaluate((el) => {
+      const styles = window.getComputedStyle(el);
+      return styles.boxShadow;
+    });
+    // 验证聚焦时有可见的视觉指示（outline 或 box-shadow）
+    const hasFocusIndicator = outlineStyle !== "none" || boxShadow !== "none";
+    expect(hasFocusIndicator).toBe(true);
   });
 });

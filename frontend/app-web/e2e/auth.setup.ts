@@ -14,6 +14,9 @@ import path from "path";
 
 const authFile = path.join(__dirname, ".auth/user.json");
 
+// 认证流程包含外部 OAuth 跳转，给足手动登录时间
+setup.setTimeout(180_000);
+
 setup("authenticate", async ({ page }) => {
   // 导航至 Dashboard（会被重定向到 Clerk 登录页）
   await page.goto("/dashboard");
@@ -22,8 +25,10 @@ setup("authenticate", async ({ page }) => {
   // Clerk 登录成功后会重定向到 /dashboard
   await page.waitForURL("**/dashboard**", { timeout: 120_000 });
 
-  // 验证已登录：Dashboard 页面应展示「我的工作空间」
-  await expect(page.getByText("我的工作空间")).toBeVisible({ timeout: 10_000 });
+  // 验证已登录：Dashboard 页面应展示工作空间标题（中英文兼容）
+  await expect(
+    page.getByRole("heading", { name: /我的工作空间|My Workspaces/ }),
+  ).toBeVisible({ timeout: 10_000 });
 
   // 保存认证状态（cookie + localStorage）
   await page.context().storageState({ path: authFile });

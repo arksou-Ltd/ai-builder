@@ -9,8 +9,15 @@
 
 import { useMemo } from "react";
 
-import { useWorkflowStepsStore } from "@/lib/workflow/workflow-steps-store";
-import type { WorkflowStepId, WorkflowStepState } from "@/lib/workflow/workflow-steps";
+import {
+  getOrCreateWorkspaceData,
+  useWorkflowStepsStore,
+  type WorkspaceWorkflowData,
+} from "@/lib/workflow/workflow-steps-store";
+import {
+  type WorkflowStepId,
+  type WorkflowStepState,
+} from "@/lib/workflow/workflow-steps";
 
 interface UseWorkspaceWorkflowStepsReturn {
   /** 8 个步骤的当前状态 */
@@ -27,14 +34,23 @@ interface UseWorkspaceWorkflowStepsReturn {
 export function useWorkspaceWorkflowSteps(
   workspaceId: string,
 ): UseWorkspaceWorkflowStepsReturn {
-  const getSteps = useWorkflowStepsStore((state) => state.getSteps);
-  const getCurrentStepId = useWorkflowStepsStore((state) => state.getCurrentStepId);
-
-  const steps = useMemo(() => getSteps(workspaceId), [getSteps, workspaceId]);
-  const currentStepId = useMemo(
-    () => getCurrentStepId(workspaceId),
-    [getCurrentStepId, workspaceId],
+  const rawWorkspaceData = useWorkflowStepsStore(
+    (state) => state.workspaces[workspaceId],
   );
+
+  const workspaceData = useMemo(
+    () =>
+      getOrCreateWorkspaceData(
+        rawWorkspaceData
+          ? ({ [workspaceId]: rawWorkspaceData } as Record<string, WorkspaceWorkflowData>)
+          : {},
+        workspaceId,
+      ),
+    [rawWorkspaceData, workspaceId],
+  );
+
+  const steps = workspaceData.steps;
+  const currentStepId = workspaceData?.currentStepId ?? null;
 
   return { steps, currentStepId };
 }

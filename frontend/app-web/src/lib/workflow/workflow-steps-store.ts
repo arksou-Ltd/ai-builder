@@ -19,6 +19,7 @@ import {
   WORKFLOW_STEPS,
   createDefaultStepStates,
   isValidStepId,
+  isValidStepStatus,
   reconcileStepStates,
 } from "./workflow-steps";
 
@@ -28,7 +29,7 @@ const STORE_VERSION = 1;
 
 // ─── 单个工作空间的步骤数据 ──────────────────────────────────────
 
-interface WorkspaceWorkflowData {
+export interface WorkspaceWorkflowData {
   steps: WorkflowStepState[];
   currentStepId: WorkflowStepId | null;
   version: number;
@@ -54,7 +55,10 @@ interface WorkflowStepsStore {
   ) => void;
 
   /** 设置当前步骤（同时自动收敛前序步骤为 completed） */
-  setCurrentStep: (workspaceId: string, stepId: WorkflowStepId) => void;
+  setCurrentStep: (
+    workspaceId: string,
+    stepId: WorkflowStepId | null,
+  ) => void;
 
   /** 批量更新步骤状态（用于事件适配层） */
   batchUpdateSteps: (
@@ -68,23 +72,54 @@ interface WorkflowStepsStore {
 
 // ─── 内部工具函数 ────────────────────────────────────────────────
 
-function getOrCreateWorkspaceData(
+export function getOrCreateWorkspaceData(
   workspaces: Record<string, WorkspaceWorkflowData>,
   workspaceId: string,
 ): WorkspaceWorkflowData {
   const existing = workspaces[workspaceId];
-
-  // 版本不兼容或数据损坏时回退到默认状态
-  if (existing && existing.version === STORE_VERSION && existing.steps.length === WORKFLOW_STEPS.length) {
-    // 校验所有 stepId 是否合法
-    const allValid = existing.steps.every((s) => isValidStepId(s.stepId));
-    if (allValid) return existing;
+  if (existing) {
+    const sanitized = sanitizeWorkspaceWorkflowData(existing);
+    if (sanitized) return sanitized;
   }
 
   return {
     steps: createDefaultStepStates(),
     currentStepId: null,
     version: STORE_VERSION,
+  };
+}
+
+function sanitizeWorkspaceWorkflowData(
+  existing: WorkspaceWorkflowData,
+): WorkspaceWorkflowData | null {
+  if (existing.version !== STORE_VERSION) return null;
+  if (existing.steps.length !== WORKFLOW_STEPS.length) return null;
+
+  const statusMap = new Map<WorkflowStepId, WorkflowStepStatus>();
+
+  for (const step of existing.steps) {
+    if (!isValidStepId(step.stepId) || !isValidStepStatus(step.status)) {
+      return null;
+    }
+    if (statusMap.has(step.stepId)) {
+      return null;
+    }
+    statusMap.set(step.stepId, step.status);
+  }
+
+  if (statusMap.size !== WORKFLOW_STEPS.length) return null;
+  const currentStepValid =
+    existing.currentStepId === null || isValidStepId(existing.currentStepId);
+  if (!currentStepValid) return null;
+
+  const normalizedSteps: WorkflowStepState[] = WORKFLOW_STEPS.map((stepDef) => ({
+    stepId: stepDef.stepId,
+    status: statusMap.get(stepDef.stepId) ?? stepDef.defaultStatus,
+  }));
+
+  return {
+    ...existing,
+    steps: reconcileStepStates(normalizedSteps, existing.currentStepId),
   };
 }
 
@@ -127,6 +162,20 @@ export const useWorkflowStepsStore = create<WorkflowStepsStore>()(
       setCurrentStep: (workspaceId, stepId) => {
         set((state) => {
           const data = getOrCreateWorkspaceData(state.workspaces, workspaceId);
+
+          if (stepId === null) {
+            return {
+              workspaces: {
+                ...state.workspaces,
+                [workspaceId]: {
+                  ...data,
+                  currentStepId: null,
+                  steps: reconcileStepStates(data.steps, null),
+                },
+              },
+            };
+          }
+
           const updatedSteps = data.steps.map((step) =>
             step.stepId === stepId
               ? { ...step, status: "in_progress" as const }
