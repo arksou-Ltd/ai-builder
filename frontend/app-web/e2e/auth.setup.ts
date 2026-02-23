@@ -15,7 +15,7 @@ import path from "path";
 const authFile = path.join(__dirname, ".auth/user.json");
 
 // 认证流程包含外部 OAuth 跳转，给足手动登录时间
-setup.setTimeout(180_000);
+setup.describe.configure({ timeout: 180_000 });
 
 setup("authenticate", async ({ page }) => {
   // 导航至 Dashboard（会被重定向到 Clerk 登录页）

@@ -105,5 +105,17 @@
       "inProgress": "In Progress",
       "completed": "Completed"
     }
+  },
+  "storyTree": {
+    "title": "Requirements",
+    "emptyState": "No requirements available",
+    "lockedTooltip": "This story is locked. Complete previous stories first.",
+    "recoveryHint": "Selected story context is temporarily unavailable. Restored to the nearest workable state.",
+    "status": {
+      "backlog": "Backlog",
+      "inProgress": "In Progress",
+      "review": "In Review",
+      "done": "Done"
+    }
   }
 }

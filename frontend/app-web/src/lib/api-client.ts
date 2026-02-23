@@ -8,6 +8,7 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const REQUEST_TIMEOUT_MS = 10_000;
 
 /** 后端 Result[T] 统一响应结构 */
 export interface ApiResult<T> {
@@ -58,6 +59,10 @@ export async function apiRequest<T>(
   options: RequestInit = {},
   getToken?: () => Promise<string | null>,
 ): Promise<T> {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    throw new Error("Network offline");
+  }
+
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
 
@@ -70,10 +75,26 @@ export async function apiRequest<T>(
   }
 
   const url = `${API_BASE_URL}${path}`;
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    timeoutController.abort();
+  }, REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      signal: options.signal ?? timeoutController.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Network request timeout");
+    }
+    throw new Error("Network request failed");
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // 解析 Result[T] 结构
   const result: ApiResult<T> = await response.json();

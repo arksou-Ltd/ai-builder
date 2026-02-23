@@ -20,12 +20,16 @@ import { WorkspaceError } from "@/components/workspace/WorkspaceError";
 import { WorkspaceSettingsPanel } from "@/components/workspace/WorkspaceSettingsPanel";
 import { DesktopGuard } from "@/components/workspace/DesktopGuard";
 import { WorkflowStepsPanel } from "@/components/workspace/WorkflowStepsPanel";
+import { EpicStoryNavigationTree } from "@/components/workspace/EpicStoryNavigationTree";
 import { useWorkspaceWorkflowSteps } from "@/components/workspace/hooks/useWorkspaceWorkflowSteps";
+import { useWorkspaceStoryTree } from "@/components/workspace/hooks/useWorkspaceStoryTree";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getWorkspace } from "@/lib/api/workspaces";
+import { cn } from "@/lib/utils";
 import { subscribeWorkflowStepEvents } from "@/lib/workflow/workflow-step-events";
+import { subscribeStoryTreeEvents } from "@/lib/workflow/workflow-story-tree-events";
 
 export default function WorkspacePage() {
   const params = useParams<{ workspaceId: string }>();
@@ -33,6 +37,7 @@ export default function WorkspacePage() {
   const { user } = useUser();
   const t = useTranslations("workspaceShell");
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
+  const [selectionFailedNotice, setSelectionFailedNotice] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
@@ -51,7 +56,12 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!params.workspaceId) return;
-    return subscribeWorkflowStepEvents(params.workspaceId);
+    const unsubStep = subscribeWorkflowStepEvents(params.workspaceId);
+    const unsubTree = subscribeStoryTreeEvents(params.workspaceId);
+    return () => {
+      unsubStep();
+      unsubTree();
+    };
   }, [params.workspaceId]);
 
   // 获取工作空间详情
@@ -78,9 +88,45 @@ export default function WorkspacePage() {
     params.workspaceId,
   );
 
+  // Epic/Story 导航树状态（从持久化 store 恢复）
+  const {
+    treeData,
+    selectedContext,
+    lockStates,
+    selectStory,
+    toggleEpic,
+  } = useWorkspaceStoryTree(params.workspaceId);
+
+  const tStoryTree = useTranslations("storyTree");
+
   const handleRetry = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  const handleSelectStory = useCallback(
+    (storyId: string) => {
+      const success = selectStory(storyId);
+      if (!success) {
+        setSelectionFailedNotice(true);
+      } else {
+        setSelectionFailedNotice(false);
+      }
+    },
+    [selectStory],
+  );
+
+  const selectedContextMissing = Boolean(
+    treeData.selectedStoryId && !selectedContext,
+  );
+  const storyTreeNotice = selectedContext
+    ? null
+    : selectionFailedNotice
+      ? tStoryTree("lockedTooltip")
+      : treeData.recoveryHintVisible
+        ? tStoryTree("recoveryHint")
+      : selectedContextMissing
+        ? tStoryTree("recoveryHint")
+        : null;
 
   if (isDesktop === false) {
     return <DesktopGuard />;
@@ -149,15 +195,42 @@ export default function WorkspacePage() {
               steps={workflowSteps}
               currentStepId={currentStepId}
             />
-            {/* Story 3.3 将在此处实现导航树 */}
+            {/* Story 3.3: Epic/Story 导航树 */}
+            <EpicStoryNavigationTree
+              epics={treeData.epics}
+              selectedStoryId={treeData.selectedStoryId}
+              expandedEpicIds={treeData.expandedEpicIds}
+              lockStates={lockStates}
+              onSelectStory={handleSelectStory}
+              onToggleEpic={toggleEpic}
+            />
           </div>
         }
         centerPanel={
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
             {/* Story 3.4~3.5 将在此处实现对话流和输入区 */}
-            <p className="text-muted-foreground text-sm">
-              {workspace?.name}
-            </p>
+            {storyTreeNotice ? (
+              <p
+                className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                data-testid="story-tree-recovery-notice"
+              >
+                {storyTreeNotice}
+              </p>
+            ) : null}
+            {selectedContext ? (
+              <div className="text-center" data-testid="selected-story-context">
+                <p className="text-sm font-medium text-foreground">
+                  {selectedContext.epicTitle} / {selectedContext.storyTitle}
+                </p>
+                <p className="text-muted-foreground text-xs mt-1">
+                  {tStoryTree(`status.${selectedContext.storyStatus === "in_progress" ? "inProgress" : selectedContext.storyStatus}`)}
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {workspace?.name}
+              </p>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -182,8 +255,29 @@ export default function WorkspacePage() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="progress" className="mt-4">
-              {/* Story 3.7 将在此处实现需求进度 Tab 内容 */}
-              <p className="text-muted-foreground text-sm">{t("rightPanelPlaceholder")}</p>
+              {/* Story 3.7 将在此处实现需求进度 Tab 全量内容 */}
+              {selectedContext ? (
+                <div className="space-y-2" data-testid="progress-story-context">
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedContext.storyTitle}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {selectedContext.epicTitle}
+                  </p>
+                  <p className="text-xs">
+                    <span className={cn(
+                      selectedContext.storyStatus === "backlog" && "text-slate-500",
+                      selectedContext.storyStatus === "in_progress" && "text-blue-500",
+                      selectedContext.storyStatus === "review" && "text-amber-500",
+                      selectedContext.storyStatus === "done" && "text-green-500",
+                    )}>
+                      {tStoryTree(`status.${selectedContext.storyStatus === "in_progress" ? "inProgress" : selectedContext.storyStatus}`)}
+                    </span>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">{t("rightPanelPlaceholder")}</p>
+              )}
             </TabsContent>
             <TabsContent value="settings" className="mt-4">
               <WorkspaceSettingsPanel

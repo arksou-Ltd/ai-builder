@@ -105,5 +105,17 @@
       "inProgress": "进行中",
       "completed": "已完成"
     }
+  },
+  "storyTree": {
+    "title": "需求导航",
+    "emptyState": "暂无需求数据",
+    "lockedTooltip": "此 Story 尚未解锁，需按顺序执行",
+    "recoveryHint": "当前 Story 上下文暂不可用，已为你恢复到最近可继续的状态。",
+    "status": {
+      "backlog": "待开发",
+      "inProgress": "开发中",
+      "review": "Review中",
+      "done": "已完成"
+    }
   }
 }
