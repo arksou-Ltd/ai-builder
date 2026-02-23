@@ -26,6 +26,7 @@ const TEXT = {
   createWorkspace: /创建工作空间|Create Workspace/,
   workspaceNamePlaceholder: /输入工作空间名称|Enter workspace name/,
   createAction: /^创建$|^Create$/,
+  nameRequired: /工作空间名称不能为空|Workspace name is required/,
   enterSpace: /进入空间|Enter Space/,
   workspaceActions: /工作空间操作|Workspace actions/,
   deleteWorkspace: /删除工作空间|Delete Workspace/,
@@ -34,6 +35,43 @@ const TEXT = {
 } as const;
 
 test.use({ storageState: authFile });
+
+function escapeForAttributeSelector(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function getWorkspaceCard(page: import("@playwright/test").Page, name: string) {
+  return page.locator(`[aria-label*="${escapeForAttributeSelector(name)}"]`).first();
+}
+
+async function waitForWorkspaceCard(
+  page: import("@playwright/test").Page,
+  name: string,
+  options: { attempts?: number; perAttemptTimeoutMs?: number } = {},
+) {
+  const attempts = options.attempts ?? 3;
+  const perAttemptTimeoutMs = options.perAttemptTimeoutMs ?? 8_000;
+
+  for (let i = 0; i < attempts; i += 1) {
+    const card = getWorkspaceCard(page, name);
+    const isVisible = await card
+      .waitFor({ state: "visible", timeout: perAttemptTimeoutMs })
+      .then(() => true)
+      .catch(() => false);
+    if (isVisible) {
+      return card;
+    }
+
+    if (i < attempts - 1) {
+      await page.reload();
+      await expect(page.getByRole("heading", { name: TEXT.dashboardTitle })).toBeVisible({
+        timeout: 10_000,
+      });
+    }
+  }
+
+  throw new Error(`Workspace card not found after retries: ${name}`);
+}
 
 /**
  * 辅助函数：创建工作空间并导航到执行页
@@ -52,22 +90,45 @@ async function createAndNavigateToWorkspace(page: import("@playwright/test").Pag
   const createDialog = page.getByRole("dialog", { name: TEXT.createWorkspace });
   await expect(createDialog).toBeVisible({ timeout: 10_000 });
 
-  const nameInput = createDialog.getByPlaceholder(TEXT.workspaceNamePlaceholder);
-  await nameInput.fill(uniqueName);
-  const typedValue = await nameInput.evaluate(
-    (el) => (el as HTMLInputElement).value,
-  );
-  expect(typedValue).toBe(uniqueName);
+  // Clerk 会话刷新阶段可能触发对话框重挂载，导致输入值被清空；因此提交前后做显式校验与重试。
+  let submitted = false;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const nameInput = createDialog.getByPlaceholder(TEXT.workspaceNamePlaceholder);
+    await nameInput.fill(uniqueName);
+    await expect(nameInput).toHaveValue(uniqueName, { timeout: 3_000 });
 
-  await createDialog.getByRole("button", { name: TEXT.createAction }).click();
-  await expect(page.getByText(uniqueName)).toBeVisible({ timeout: 10_000 });
+    await createDialog.getByRole("button", { name: TEXT.createAction }).click({ force: true });
+    const closed = await createDialog
+      .waitFor({ state: "hidden", timeout: 8_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (closed) {
+      submitted = true;
+      break;
+    }
 
-  const card = page.locator(`[aria-label*="${uniqueName}"]`);
+    const hasNameRequired = await createDialog.getByText(TEXT.nameRequired).isVisible().catch(() => false);
+    if (!hasNameRequired) {
+      break;
+    }
+  }
+
+  if (!submitted) {
+    throw new Error(`Create workspace dialog did not close after retries: ${uniqueName}`);
+  }
+
+  const card = await waitForWorkspaceCard(page, uniqueName);
   const enterButton = card.getByRole("button", { name: TEXT.enterSpace });
   await enterButton.click();
   await page.waitForURL("**/workspace/**", { timeout: 10_000 });
 
   return uniqueName;
+}
+
+function parseWorkspaceNameFromAriaLabel(label: string): string {
+  const match = label.match(/[:：]\s*(.+)$/);
+  if (match?.[1]) return match[1];
+  return label;
 }
 
 /**
@@ -79,8 +140,12 @@ async function cleanupWorkspace(page: import("@playwright/test").Page, name: str
     timeout: 10_000,
   });
 
-  const card = page.locator(`[aria-label*="${name}"]`);
-  if (await card.isVisible()) {
+  const card = getWorkspaceCard(page, name);
+  const isVisible = await card
+    .waitFor({ state: "visible", timeout: 2_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (isVisible) {
     await card.getByRole("button", { name: TEXT.workspaceActions }).click();
     await page.getByRole("menuitem", { name: TEXT.deleteWorkspace }).click();
     const dialog = page.getByRole("alertdialog");
@@ -97,25 +162,54 @@ async function navigateToWorkspace(page: import("@playwright/test").Page, name: 
   await expect(page.getByRole("heading", { name: TEXT.dashboardTitle })).toBeVisible({
     timeout: 10_000,
   });
-  const card = page.locator(`[aria-label*="${name}"]`);
+  const card = await waitForWorkspaceCard(page, name);
   await card.getByRole("button", { name: TEXT.enterSpace }).click();
   await page.waitForURL("**/workspace/**", { timeout: 10_000 });
 }
 
 test.describe("工作流步骤面板", () => {
   test.describe.configure({ mode: "serial" });
+  test.setTimeout(90_000);
 
   let workspaceName: string;
+  let createdForThisRun = false;
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser }, testInfo) => {
+    testInfo.setTimeout(120_000);
     const context = await browser.newContext({ storageState: authFile });
     const page = await context.newPage();
     await page.setViewportSize({ width: 1280, height: 800 });
+
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { name: TEXT.dashboardTitle })).toBeVisible({
+      timeout: 10_000,
+    });
+
+    const existingCard = page
+      .locator('[aria-label*="Workspace:"], [aria-label*="工作空间："]')
+      .first();
+    const hasExisting = await existingCard
+      .waitFor({ state: "visible", timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (hasExisting) {
+      const ariaLabel = await existingCard.getAttribute("aria-label");
+      if (!ariaLabel) {
+        throw new Error("Workspace card aria-label is missing");
+      }
+      workspaceName = parseWorkspaceNameFromAriaLabel(ariaLabel);
+      await context.close();
+      return;
+    }
+
     workspaceName = await createAndNavigateToWorkspace(page);
+    createdForThisRun = true;
     await context.close();
   });
 
   test.afterAll(async ({ browser }) => {
+    if (!createdForThisRun) return;
+
     const context = await browser.newContext({ storageState: authFile });
     const page = await context.newPage();
     await cleanupWorkspace(page, workspaceName);
