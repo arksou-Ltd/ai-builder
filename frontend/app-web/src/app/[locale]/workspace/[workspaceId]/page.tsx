@@ -21,15 +21,17 @@ import { WorkspaceSettingsPanel } from "@/components/workspace/WorkspaceSettings
 import { DesktopGuard } from "@/components/workspace/DesktopGuard";
 import { WorkflowStepsPanel } from "@/components/workspace/WorkflowStepsPanel";
 import { EpicStoryNavigationTree } from "@/components/workspace/EpicStoryNavigationTree";
+import { ConversationStreamPanel } from "@/components/workspace/ConversationStreamPanel";
 import { useWorkspaceWorkflowSteps } from "@/components/workspace/hooks/useWorkspaceWorkflowSteps";
 import { useWorkspaceStoryTree } from "@/components/workspace/hooks/useWorkspaceStoryTree";
-import { Button } from "@/components/ui/button";
+import { useWorkspaceConversation } from "@/components/workspace/hooks/useWorkspaceConversation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getWorkspace } from "@/lib/api/workspaces";
 import { cn } from "@/lib/utils";
 import { subscribeWorkflowStepEvents } from "@/lib/workflow/workflow-step-events";
 import { subscribeStoryTreeEvents } from "@/lib/workflow/workflow-story-tree-events";
+import { subscribeConversationEvents } from "@/lib/workflow/workflow-conversation-events";
 
 export default function WorkspacePage() {
   const params = useParams<{ workspaceId: string }>();
@@ -58,9 +60,11 @@ export default function WorkspacePage() {
     if (!params.workspaceId) return;
     const unsubStep = subscribeWorkflowStepEvents(params.workspaceId);
     const unsubTree = subscribeStoryTreeEvents(params.workspaceId);
+    const unsubConversation = subscribeConversationEvents(params.workspaceId);
     return () => {
       unsubStep();
       unsubTree();
+      unsubConversation();
     };
   }, [params.workspaceId]);
 
@@ -96,6 +100,14 @@ export default function WorkspacePage() {
     selectStory,
     toggleEpic,
   } = useWorkspaceStoryTree(params.workspaceId);
+
+  // 对话消息状态（从持久化 store 恢复）
+  const {
+    messages: conversationMessages,
+    recoveryHintVisible: conversationRecoveryHintVisible,
+    toggleThinking,
+  } =
+    useWorkspaceConversation(params.workspaceId);
 
   const tStoryTree = useTranslations("storyTree");
 
@@ -207,18 +219,19 @@ export default function WorkspacePage() {
           </div>
         }
         centerPanel={
-          <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            {/* Story 3.4~3.5 将在此处实现对话流和输入区 */}
+          <div className="flex flex-1 flex-col">
+            {/* Story 3.3: 恢复提示（兼容保留） */}
             {storyTreeNotice ? (
               <p
-                className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                className="mx-4 mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
                 data-testid="story-tree-recovery-notice"
               >
                 {storyTreeNotice}
               </p>
             ) : null}
+            {/* Story 3.3: 选中上下文（兼容保留） */}
             {selectedContext ? (
-              <div className="text-center" data-testid="selected-story-context">
+              <div className="mx-4 mt-2 text-center" data-testid="selected-story-context">
                 <p className="text-sm font-medium text-foreground">
                   {selectedContext.epicTitle} / {selectedContext.storyTitle}
                 </p>
@@ -226,19 +239,13 @@ export default function WorkspacePage() {
                   {tStoryTree(`status.${selectedContext.storyStatus === "in_progress" ? "inProgress" : selectedContext.storyStatus}`)}
                 </p>
               </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                {workspace?.name}
-              </p>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid="center-placeholder-action"
-              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {t("centerPanelAction")}
-            </Button>
+            ) : null}
+            {/* Story 3.4: 对话流面板 */}
+            <ConversationStreamPanel
+              messages={conversationMessages}
+              recoveryHintVisible={conversationRecoveryHintVisible}
+              onToggleThinking={toggleThinking}
+            />
           </div>
         }
         rightPanel={

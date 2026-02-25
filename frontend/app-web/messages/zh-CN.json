@@ -117,5 +117,24 @@
       "review": "Review中",
       "done": "已完成"
     }
+  },
+  "conversation": {
+    "panelLabel": "对话流",
+    "emptyState": "暂无对话消息，开始执行工作流后将在此显示实时更新。",
+    "recoveryHint": "检测到历史对话数据异常，系统已自动恢复到可继续状态。",
+    "userLabel": "用户",
+    "aiLabel": "AI",
+    "streaming": "输出中",
+    "aiThinking": "AI 正在思考…",
+    "thinkingInProgress": "思考中…",
+    "thinkingComplete": "思考过程",
+    "inFlowUpdate": "进度更新",
+    "error": {
+      "recoverable": "操作失败，请重试",
+      "needsContext": "请补充上下文后重试",
+      "blocked": "请前往设置页面完成配置",
+      "retryAction": "重试",
+      "settingsAction": "去设置"
+    }
   }
 }

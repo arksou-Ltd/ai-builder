@@ -117,5 +117,24 @@
       "review": "In Review",
       "done": "Done"
     }
+  },
+  "conversation": {
+    "panelLabel": "Conversation Stream",
+    "emptyState": "No messages yet. Start executing a workflow to see real-time updates here.",
+    "recoveryHint": "Historical conversation data was invalid and has been auto-recovered.",
+    "userLabel": "User",
+    "aiLabel": "AI",
+    "streaming": "Streaming",
+    "aiThinking": "AI is thinking…",
+    "thinkingInProgress": "Thinking…",
+    "thinkingComplete": "Thinking Process",
+    "inFlowUpdate": "Progress Update",
+    "error": {
+      "recoverable": "Operation failed. Please retry.",
+      "needsContext": "Please provide additional context and retry.",
+      "blocked": "Please go to Settings to complete configuration.",
+      "retryAction": "Retry",
+      "settingsAction": "Go to Settings"
+    }
   }
 }
