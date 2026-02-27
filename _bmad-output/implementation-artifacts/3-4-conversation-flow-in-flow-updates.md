@@ -1,13 +1,13 @@
 # Story 3.4: conversation-flow-in-flow-updates
 
-Status: done
+Status: ready-for-dev
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story
 
-As a PM 用户,  
-I want 在中间区域持续看到 AI 对话与过程更新,  
+As a PM 用户,
+I want 在中间区域持续看到 AI 对话与过程更新,
 so that 我可以理解系统行为并在关键节点及时介入。
 
 ## Acceptance Criteria
@@ -16,270 +16,197 @@ so that 我可以理解系统行为并在关键节点及时介入。
    **When** AI 产生消息或进度更新  
    **Then** 中间对话流实时追加消息并保持时间顺序。
 
-2. **Given** 系统处于自动执行阶段  
-   **When** 工作流步骤状态或故事状态发生变化  
-   **Then** 进度更新以 In-flow Updates 形式写入对话流（而不是仅停留在侧栏状态）。
+2. **Given** 系统进入自动执行阶段  
+   **When** 工作流步骤、故事状态或验证进度发生变化  
+   **Then** 进度更新必须以 In-flow Updates 形式写入对话流，而不是仅显示在右侧面板。
 
-3. **Given** AI 回复采用流式输出  
+3. **Given** AI 正在输出思考或正文内容  
    **When** 输出进行中与输出完成  
-   **Then** 消息支持逐步渲染（streaming）  
-   **And** 输出完成后“思考过程”可折叠，进行中不可折叠。
+   **Then** 支持逐步流式渲染（token-by-token/segment-by-segment）  
+   **And** 完成后思考过程可折叠。
 
-4. **Given** 用户使用键盘与读屏器访问中间区域  
-   **When** 新消息到达或错误发生  
-   **Then** 对话容器具备 `role="log"` 与 `aria-live`  
-   **And** 错误反馈使用 `role="alert"` 或等效可访问语义。
+4. **Given** 用户使用键盘或读屏器  
+   **When** 对话流出现新增消息或错误提示  
+   **Then** 对话区域使用 `role="log"` 与 `aria-live` 进行可访问性播报。
 
 ## Tasks / Subtasks
 
-- [x] Task 1: 建立中间对话域模型与消息协议（AC: 1,2,3）
-  - [x] 新增 `frontend/app-web/src/lib/workflow/workflow-conversation.ts`，定义 `ConversationMessage`、`MessageKind`（`user|ai|system|in_flow_update`）、`StreamingState`、`ThinkingState`。
-  - [x] 明确排序键：`createdAt + sequence`，保证追加顺序稳定且跨刷新可恢复。
-  - [x] 定义 In-flow 消息映射规则：从 `workflow.step` / `workflow.story.status` 事件生成可展示文本与严重级别（info/warn/error）。
+- [ ] Task 1: 定义对话流领域模型与事件契约（AC: 1,2,3）
+  - [ ] 新增 `frontend/app-web/src/lib/workflow/workflow-conversation.ts`，定义消息类型：`user`、`ai`、`system`、`in_flow_update`。
+  - [ ] 定义消息状态：`thinking`、`streaming`、`complete`、`error`，并提供严格类型守卫。
+  - [ ] 对齐 ADR-005，定义并约束事件 payload：`ai.thinking`、`workflow.step`、`workflow.story.status`、`error`。
 
-- [x] Task 2: 实现 Conversation Store（Zustand + persist）并按 `workspaceId` 隔离（AC: 1,2,3）
-  - [x] 新增 `frontend/app-web/src/lib/workflow/workflow-conversation-store.ts`，提供 `appendMessage`、`appendInFlowUpdate`、`startStreaming`、`appendStreamingDelta`、`completeStreaming`、`toggleThinkingCollapse`。
-  - [x] `partialize` 仅持久化必要字段，避免临时 UI 状态污染恢复结果。
-  - [x] 数据损坏或版本不兼容时回退安全默认值，并输出可恢复提示。
+- [ ] Task 2: 实现对话流状态容器与恢复能力（AC: 1,2）
+  - [ ] 新增 `frontend/app-web/src/lib/workflow/workflow-conversation-store.ts`（Zustand + persist），按 `workspaceId` 隔离消息流。
+  - [ ] 保证时间顺序稳定：同一消息流按 `createdAt + sequence` 排序，避免乱序渲染。
+  - [ ] 支持刷新恢复最近消息上下文，异常数据自动回退并给出可恢复提示。
 
-- [x] Task 3: 打通事件适配层与 In-flow 注入（AC: 1,2）
-  - [x] 新增 `frontend/app-web/src/lib/workflow/workflow-conversation-events.ts`，订阅并适配现有 `workflow.step`、`workflow.story.status` 事件。
-  - [x] 预留 WebSocket 接入函数（与 ADR-005 一致）：`adaptWebSocketAiThinkingMessage`、`adaptWebSocketStepMessage`。
-  - [x] 严格复用已有事件语义，不重复造新的”并行状态源”。
+- [ ] Task 3: 实现中间区域对话组件（AC: 1,3,4）
+  - [ ] 新增 `frontend/app-web/src/components/workspace/chat/ChatTimeline.tsx`（承载 `role="log"` + `aria-live="polite"`）。
+  - [ ] 新增 `frontend/app-web/src/components/workspace/chat/ChatMessage.tsx`，区分用户/AI/系统/进度消息视觉样式。
+  - [ ] 新增 `frontend/app-web/src/components/workspace/chat/ThinkingProcess.tsx`，实现“流式中不可折叠、完成后可折叠”。
+  - [ ] 新增 `frontend/app-web/src/components/workspace/chat/InFlowUpdateMessage.tsx`，统一展示步骤进度与状态更新。
 
-- [x] Task 4: 实现中间对话组件（AC: 1,3,4）
-  - [x] 新增 `frontend/app-web/src/components/workspace/ConversationStreamPanel.tsx`，渲染消息流、时间戳、消息类型样式与空态。
-  - [x] 新增 `frontend/app-web/src/components/workspace/ConversationMessageItem.tsx`（或同等拆分），区分 `user/ai/system/in_flow_update` 呈现。
-  - [x] 新增 `frontend/app-web/src/components/workspace/ThinkingProcess.tsx`，满足”streaming 不可折叠、complete 可折叠”交互规则。
-  - [x] 对话容器必须使用 `role=”log” aria-live=”polite”`；流式内容区域设置 `aria-atomic=”false”` 仅播报新增内容。
+- [ ] Task 4: 接入页面编排与事件管道（AC: 1,2）
+  - [ ] 在 `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx` 替换中间区占位内容，接入 `ChatTimeline`。
+  - [ ] 新增 `frontend/app-web/src/lib/workflow/workflow-conversation-events.ts`，复用当前 `subscribeWorkflowStepEvents` / `subscribeStoryTreeEvents` 模式。
+  - [ ] 预留 WebSocket 消息适配入口（`adaptWebSocketConversationMessage`），保证后续后端接入不改 UI 组件协议。
 
-- [x] Task 5: 页面编排接入（AC: 1,2,3,4）
-  - [x] 在 `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx` 用 `ConversationStreamPanel` 替换 Story 3.4 占位区。
-  - [x] 保留并兼容 Story 3.3 的 `selectedContext` 展示与恢复提示，避免回归。
-  - [x] 接入 `subscribeConversationEvents(workspaceId)` 生命周期，页面卸载时正确清理监听。
+- [ ] Task 5: In-flow Updates 规则落地（AC: 2）
+  - [ ] 将 `workflow.step`、`workflow.story.status`、验证阶段状态映射为可读进度文案写入对话流。
+  - [ ] 保持右侧进度 Tab 继续展示结构化状态，但中间区必须同步插入进度消息。
+  - [ ] 对重复进度事件做幂等处理（同类型同目标短时间内合并），避免消息洪泛。
 
-- [x] Task 6: 国际化、反馈与错误恢复（AC: 2,4）
-  - [x] 更新 `frontend/app-web/messages/zh-CN.json` 与 `frontend/app-web/messages/en.json`，新增对话区标题、In-flow 文案、流式状态文案、折叠动作、错误恢复文案。
-  - [x] 错误提示遵循阻塞性分级：可恢复（重试）/需干预（补充上下文）/阻塞（去设置）。
-  - [x] 超过 300ms 的异步等待展示 Skeleton 或等效 loading 指示。
+- [ ] Task 6: 国际化与无障碍完善（AC: 4）
+  - [ ] 更新 `frontend/app-web/messages/zh-CN.json` 与 `frontend/app-web/messages/en.json`，新增 chat/in-flow 文案。
+  - [ ] 为思考折叠按钮、消息类型标识、错误提示补充 `aria-label`。
+  - [ ] 对错误提示统一使用 `role="alert"` 或独立 `aria-live` 区域，避免静默失败。
 
-- [x] Task 7: E2E 验证（No Mock）（AC: 1,2,3,4）
-  - [x] 新增 `frontend/app-web/e2e/workspace-conversation-flow.spec.ts`，覆盖消息实时追加、顺序一致性、In-flow 注入。
-  - [x] 覆盖流式输出逐步渲染与完成后可折叠思考过程行为。
-  - [x] 覆盖 A11y 断言：`role=”log”`、`aria-live`、`role=”alert”`、键盘可达。
-  - [x] 覆盖 1024px 与 1280px 桌面断点，且不破坏 `workspace-workflow-steps.spec.ts` 与 `workspace-epic-story-tree.spec.ts` 回归。
+- [ ] Task 7: E2E 验证（No Mock）（AC: 1,2,3,4）
+  - [ ] 新增 `frontend/app-web/e2e/workspace-conversation-flow.spec.ts`。
+  - [ ] 覆盖：消息追加顺序、In-flow Updates 注入、流式渲染与思考折叠、`role="log"`/`aria-live`、桌面断点（1024/1280）。
+  - [ ] 严格遵循 No Mock Policy：禁止 mock/stub/fake/spy 与网络拦截替身。
 
 ## Dev Notes
 
 ### Story Foundation
 
-- 本 Story 是 Epic 3 中间区域 A 的核心实现，直接承接 Story 3.3 已建立的“选中 Story 上下文跨区域同步”基础。
-- 目标不是新建独立聊天产品，而是在现有工作空间壳层里补齐“实时对话 + 进度内嵌”的执行透明度。
-- 本 Story 必须把“系统自动执行状态”显式注入对话流，避免用户只能从侧栏猜测系统行为。
+- 本 Story 对应 Epic 3 的中间区域 A，目标是把当前“静态占位”升级为“可持续可观察的对话流”。
+- 该 Story 与 Story 3.2（步骤事件）和 Story 3.3（Story 导航事件）直接耦合：两者状态变化必须转化为 In-flow Updates。
+- 本 Story只聚焦“对话流展示与过程更新”；输入区“下一步引导”属于 Story 3.5。
 
 ### Developer Context Section
 
-- 当前 `page.tsx` 中间区域仍是占位实现，已有 `selectedContext` 与恢复提示逻辑，不可回退这条链路。  
-  [Source: `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx`]
-- 现有事件体系已具备：
-  - 步骤事件：`workflow.step`（`workflow-step-events.ts`）
-  - Story 事件：`workflow.story.select` / `workflow.story.status`（`workflow-story-tree-events.ts`）
-- Story 3.4 应在此基础上新增“对话事件适配层”，而不是绕开既有 store 体系再建一套状态。
-- 现有持久化模式已统一采用 Zustand `persist + partialize + version`，新 store 必须对齐该模式。  
-  [Source: `frontend/app-web/src/lib/workflow/workflow-steps-store.ts`, `frontend/app-web/src/lib/workflow/workflow-story-tree-store.ts`]
+- 当前 `page.tsx` 中间区域仍是占位文本 + 按钮；尚未形成消息模型、消息组件、消息存储。
+- 左侧与右侧已有状态来源（workflow steps + story tree），中间区域可直接复用这些状态事件而非重复建模。
+- 当前工程已形成“事件适配层 + Zustand store + 页面订阅”的稳定模式（Story 3.2/3.3），本 Story 必须沿用。
 
 ### Dev Agent Guardrails: Technical Requirements
 
 | Check Item | Requirement |
 | --- | --- |
-| Message Ordering | 所有消息追加必须按 `createdAt + sequence` 稳定排序，禁止出现“后到先渲染” |
-| In-flow Injection | 自动执行进度必须进入对话流（系统消息），不可仅更新左/右侧 UI |
-| Streaming Behavior | AI 消息支持 delta 增量渲染；streaming 完成后才允许折叠思考过程 |
-| Accessibility | 对话容器 `role="log" aria-live="polite"`；错误消息 `role="alert"` |
-| Recovery | 数据损坏/会话恢复失败必须降级可恢复，不可导致中间区域空白不可操作 |
-| No Reinvention | 复用现有 `workflow-step-events` / `workflow-story-tree-events` 语义与 store 设计 |
-| UX Compliance | 严格遵循 `_bmad-output/planning-artifacts/ux-design-specification.md` 中对话、流式、反馈规范 |
+| Message Ordering | 对话流必须按时间顺序追加，禁止新消息插入历史位置导致阅读错乱 |
+| In-flow Updates | 自动阶段进度必须进入中间对话流，不能只在右侧面板显示 |
+| Streaming | AI 消息需支持流式增量渲染，输出结束后状态切换为 complete |
+| Thinking Collapse | 思考过程 streaming 时不可折叠，complete 后可折叠 |
+| Accessibility | 对话容器必须 `role="log"` + `aria-live="polite"`，错误提示必须可播报 |
+| No Reinvention | 复用 `workflow-step-events.ts` 与 `workflow-story-tree-events.ts` 现有事件体系 |
+| UX Compliance | 严格遵循 `ux-design-specification.md` 中对话、反馈、In-flow updates 与动效规范 |
 
 ### Dev Agent Guardrails: Architecture Compliance
 
 | Check Item | Requirement |
 | --- | --- |
-| ADR-004 状态持久化 | 对话状态按 workspace 维度持久化并可恢复（版本校验 + 回退） |
-| ADR-005 实时通信 | 优先使用现有事件总线语义；WebSocket 仅做消息源适配，不破坏状态单一入口 |
-| ADR-008 通信协议 | 前后端数据契约保持 `Result` 风格，不在 UI 层发明非标准响应结构 |
-| ADR-009 错误恢复 | AI 超时/服务失败需提供自动重试或可执行恢复动作（重试/补充上下文/去设置） |
-| Page Orchestration | 页面层仅负责编排；消息渲染与状态计算下沉到 `components/workspace` + `lib/workflow` |
-| Regression Guard | 不破坏 Story 3.1 壳层、Story 3.2 步骤面板、Story 3.3 导航树同步链路 |
+| ADR-005 | 消息协议与实时事件命名保持一致（`workflow.step` / `ai.thinking` / `error`） |
+| ADR-004 | 对话状态需可恢复，刷新后保留必要上下文 |
+| Layering | 页面层只做装配；消息模型/事件/状态放在 `lib/workflow`；渲染组件放在 `components/workspace/chat` |
+| Reliability | 对乱序、重复、无效事件具备防护与降级策略 |
+| Non-Regression | 不破坏 Story 3.1 壳层布局、Story 3.2 步骤面板、Story 3.3 导航树同步能力 |
 
 ### Dev Agent Guardrails: Library & Framework Requirements
 
-| Library | Required Version/Constraint | Why |
-| --- | --- | --- |
-| `next` | 维持 `16.1.6`（与当前工程锁定一致） | 保持 App Router 与现有中间件行为稳定 |
-| `react` / `react-dom` | 维持 `19.2.3` 基线并持续关注安全公告 | 避免回退到已披露漏洞版本线 |
-| `zustand` | 使用现有 v5 + `persist` + `partialize` 模式 | 与已落地 store 模式一致，降低恢复与迁移风险 |
-| shadcn/radix primitives | 优先复用现有 UI primitives（按钮、折叠、可访问属性） | 降低自研组件回归风险 |
-| `next-intl` | 保持 v4 路由策略（`localePrefix: "never"`） | 防止 i18n 与认证路由回环问题 |
+| Library | Current Baseline | Latest Checked | Guidance |
+| --- | --- | --- | --- |
+| next | 16.1.6 | 16.1.6 | 保持当前版本，不在本 Story 做框架升级 |
+| react / react-dom | 19.2.3 | 19.2.4 | 本 Story 不强制升级；如升级需单独变更并回归验证 |
+| zustand | 5.0.11 | 5.0.11 | 继续使用 `persist + partialize` 模式 |
+| next-intl | 4.8.1 | 4.8.3 | 保持现有路由策略（`localePrefix: never`），升级单独评估 |
+| @clerk/nextjs | 6.37.1 | 6.38.2 | 与认证链路无关，本 Story 不改版本 |
 
 ### Dev Agent Guardrails: File Structure Requirements
 
-- 新增对话域模型：`frontend/app-web/src/lib/workflow/workflow-conversation.ts`
-- 新增对话状态存储：`frontend/app-web/src/lib/workflow/workflow-conversation-store.ts`
-- 新增对话事件适配层：`frontend/app-web/src/lib/workflow/workflow-conversation-events.ts`
-- 新增对话面板组件：`frontend/app-web/src/components/workspace/ConversationStreamPanel.tsx`
-- 新增消息项组件：`frontend/app-web/src/components/workspace/ConversationMessageItem.tsx`
-- 新增思考过程组件：`frontend/app-web/src/components/workspace/ThinkingProcess.tsx`
-- 新增 Hook（如需要）：`frontend/app-web/src/components/workspace/hooks/useWorkspaceConversation.ts`
 - 页面接入：`frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx`
-- 国际化：`frontend/app-web/messages/zh-CN.json`、`frontend/app-web/messages/en.json`
+- 新增消息模型：`frontend/app-web/src/lib/workflow/workflow-conversation.ts`
+- 新增消息存储：`frontend/app-web/src/lib/workflow/workflow-conversation-store.ts`
+- 新增消息事件适配：`frontend/app-web/src/lib/workflow/workflow-conversation-events.ts`
+- 新增中间区组件目录：`frontend/app-web/src/components/workspace/chat/`
+- 推荐组件：
+  - `ChatTimeline.tsx`
+  - `ChatMessage.tsx`
+  - `ThinkingProcess.tsx`
+  - `InFlowUpdateMessage.tsx`
+- 国际化文案：`frontend/app-web/messages/zh-CN.json`、`frontend/app-web/messages/en.json`
 - E2E：`frontend/app-web/e2e/workspace-conversation-flow.spec.ts`
 
 ### Dev Agent Guardrails: Testing Requirements
 
 | Check Item | Requirement |
 | --- | --- |
-| AC Coverage | 覆盖实时追加、In-flow 注入、流式渲染、思考折叠、A11y 语义 |
-| Timing SLA | 校验状态/消息更新在 1 秒内可见；长耗时过程每 5 秒可见进展反馈 |
-| Accessibility | 强制断言 `role="log"`、`aria-live`、`role="alert"`、键盘路径 |
-| Desktop Baseline | 至少覆盖 `1024px` 与 `1280px` |
-| No Mock Policy | 严禁 mock/stub/fake/spy 与网络拦截替身 |
-| Regression Guard | 运行并通过既有 workspace E2E 回归集，确保左/中/右编排未破坏 |
+| AC Coverage | 覆盖 4 条 AC：顺序追加、In-flow Updates、流式+折叠、无障碍播报 |
+| Timing | 关键状态更新需要在 1 秒内反映到 UI（与 Story 3.2 SLA 一致） |
+| Accessibility | 断言 `role="log"`、`aria-live`、错误 `role="alert"`/live region 生效 |
+| Desktop Baseline | 至少覆盖 1024px 与 1280px 两个桌面断点 |
+| No Mock Policy | 禁止 mock/stub/fake/spy 与网络拦截替身 |
+| Regression Guard | 不得破坏现有 `workspace-shell.spec.ts`、`workspace-workflow-steps.spec.ts`、`workspace-epic-story-tree.spec.ts` |
 
 ### Previous Story Intelligence
 
-- Story 3.3 已确认：事件层必须“真实接线到页面生命周期”，只定义函数但不订阅会导致 SLA 失效。  
-  [Source: `_bmad-output/implementation-artifacts/3-3-epic-story-navigation-tree.md`]
-- Story 3.3 已确认：持久化恢复必须做结构校验与回退，否则会出现“选中上下文丢失/锁定状态错位”。
-- Story 3.2 已建立步骤事件适配（`workflow.step`），本 Story 应直接复用其事件语义与 store 更新节奏。
-- 左/中/右跨区域同步基线已经在 3.3 打通；3.4 重点是扩展中间区能力而不是改写全链路。
+- Story 3.3 已验证“事件适配层 + 页面订阅 + store 原子更新”模式有效，本 Story 应直接复用该架构。
+- 状态恢复必须带校验与回退提示，不能仅静默降级。
+- 交互与可访问性验收必须覆盖真实键盘/读屏路径，不能只做静态属性检查。
 
 ### Git Intelligence Summary
 
-- 最近有效功能提交集中在 Epic 3 工作空间交互层（`page.tsx`、workflow stores、E2E），说明当前代码处于“可用基线已成型，持续补齐体验细节”阶段。
-- `feat(frontend:workspace-shell): 完成3-3需求导航树并修复稳定性问题` 提示本 Story 需要优先守住稳定性与恢复链路。
-- 最近文档提交同步了 Settings 入口与 UX 规范，说明页面编排策略仍在演进；实现中应避免硬编码结构假设。
-- `.codex` 技能资产更新表明 UI/UX 评审能力增强；3.4 的消息交互应纳入同等设计审查标准。
+- 最近迭代聚焦 `workspace` 执行页稳定性与状态一致性，表明本 Story 的风险点在“多源状态同步”而非纯视觉。
+- 最新提交已将设置入口迁移到右侧 Tab，说明页面编排仍在演进，中间区域改造必须保持低侵入。
+- Epic 3 当前处于连续交付阶段，建议保持“单故事单能力收敛”，避免在 3.4 混入 3.5 输入引导范围。
 
 ### Latest Tech Information
 
-- WAI-ARIA `log` 角色用于按时间顺序追加的动态内容区域，适配对话流场景；推荐结合 `aria-live` 控制播报。  
-  [Source: https://www.w3.org/WAI/ARIA/apg/patterns/log/]
-- MDN 对 `aria-live` 的实践建议：使用 `polite` 避免打断当前朗读流程，动态内容追加时可配合 `aria-atomic` 优化播报粒度。  
-  [Source: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live]
-- Next.js 官方支持策略要求保持在活跃支持版本线，并及时应用安全更新，避免中间件等安全漏洞影响。  
-  [Source: https://nextjs.org/support-policy]
-- React 官方在 2025-12 发布多项安全更新说明，强调对 RSC/路由相关漏洞保持补丁版本；当前实现需避免回退。  
-  [Source: https://react.dev/blog/2025/12/11/react-router-and-proxy-helpers-vulnerability]
-- Zustand `persist` 官方文档提供 `partialize` 等能力用于精简持久化字段，这与当前项目 store 实践一致。  
-  [Source: https://zustand.docs.pmnd.rs/middlewares/persist]
+- Next.js 16.1 为当前稳定主线，保持现有版本可降低升级风险。
+- React 19.2 最新补丁已到 `19.2.4`；本 Story 若不涉及 React 升级，应确保实现不依赖补丁新增行为。
+- React 官方 2026-01-16 安全公告要求避免落入受影响版本区间（`<19.0.1`、`19.1.0-19.1.1`、`19.2.0`）。
+- 对话无障碍应遵循 ARIA `log` 角色语义与 live region 更新原则，确保新增消息可被读屏器感知。
 
 ### Project Context Reference
 
-- 遵循 `_bmad-output/project-context.md`：
-  - 前端主干：Next.js App Router + next-intl + Zustand，禁止平行状态体系。
-  - 可访问性与 UI 必须与 UX 规范一致，失败场景需可恢复反馈。
-  - 事件驱动优先复用 `lib/workflow` 既有模式，保持后续 Story 3.5~3.7 可衔接。
+- 继续遵循 `_bmad-output/project-context.md`：
+  - 前端使用 Next.js App Router + next-intl + Zustand；
+  - 禁止在中间件/路由中硬编码 locale 前缀；
+  - 前端 UI/交互必须对照 `ux-design-specification.md` 与 `ui-ux-pro-max` 规范。
 
 ### References
 
 - `_bmad-output/planning-artifacts/epics.md`（Epic 3 / Story 3.4）
-- `_bmad-output/planning-artifacts/prd.md`（FR42-FR56, NFR-R1, NFR-P2）
-- `_bmad-output/planning-artifacts/architecture.md`（ADR-004, ADR-005, ADR-008, ADR-009）
-- `_bmad-output/planning-artifacts/ux-design-specification.md`（对话模式、In-flow Updates、A11y）
+- `_bmad-output/planning-artifacts/prd.md`（FR42-FR44, FR52-FR53, FR56, NFR-R1）
+- `_bmad-output/planning-artifacts/architecture.md`（ADR-004, ADR-005, ADR-008）
+- `_bmad-output/planning-artifacts/ux-design-specification.md`（ChatMessage、ThinkingProcess、In-flow Updates、A11y）
 - `_bmad-output/project-context.md`
-- `_bmad-output/implementation-artifacts/3-3-epic-story-navigation-tree.md`
 - `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx`
 - `frontend/app-web/src/lib/workflow/workflow-step-events.ts`
 - `frontend/app-web/src/lib/workflow/workflow-story-tree-events.ts`
-- `https://www.w3.org/WAI/ARIA/apg/patterns/log/`
-- `https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live`
-- `https://nextjs.org/support-policy`
-- `https://react.dev/blog/2025/12/11/react-router-and-proxy-helpers-vulnerability`
-- `https://zustand.docs.pmnd.rs/middlewares/persist`
+- `https://nextjs.org/blog/next-16-1`
+- `https://react.dev/blog/2025/10/01/react-19-2`
+- `https://react.dev/blog/2026/01/16/updates-to-react-security-vulnerability`
+- `https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/log_role`
 
 ## Story Completion Status
 
-- 已完成对抗式 code-review 并修复全部 High / Medium 问题。
-- 已补齐对话恢复提示、AI 流式事件真实接线、In-flow 可读文案、自动滚动缺陷修复。
-- E2E 已从“弱断言”升级为真实 `ai.thinking` 事件驱动断言，覆盖 streaming start/delta/complete。
-- 已执行 `npm run lint --prefix frontend/app-web` 与 `npm run build --prefix frontend/app-web`，均通过。
-- completion note: Adversarial code review fixes applied and validated.
+- Story context 已完成：目标、AC、任务拆解、技术护栏、测试要求、风险与依赖全部可执行。
+- 状态已设置为 `ready-for-dev`。
+- 已纳入前序故事经验与近期 git 变更模式，减少重复踩坑。
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-Claude Opus 4.6
+GPT-5 (Codex)
 
 ### Debug Log References
 
-- create-story workflow（auto-discover from sprint-status）：2026-02-25
-- story context synthesis（epics + architecture + prd + ux + project-context + git intelligence）：2026-02-25
-- web research refresh（official docs only）：2026-02-25
-- dev-story workflow（implementation of all 7 tasks）：2026-02-26
+- create-story workflow executed in automated mode
+- artifact analysis: epics/prd/architecture/ux/project-context
+- previous story analysis: `3-3-epic-story-navigation-tree.md`
+- git intelligence: last 5 commits
+- latest tech check: npm registry + official docs
 
 ### Completion Notes List
 
-- 已按 Story 3.4 AC1-AC4 构建开发任务与护栏。
-- 已明确与 Story 3.2/3.3 的状态与事件契约衔接，避免重复造轮子。
-- 已补充最新官方文档约束（A11y、支持策略、安全公告、persist 实践）。
-- 已完成 Task 1-7 全部实现，TypeScript 编译 0 错误，ESLint 0 警告。
-- 对话域模型对齐 ADR-004 持久化（Zustand persist + partialize + version）。
-- 事件适配层严格复用 workflow-step-events / workflow-story-tree-events 语义。
-- 组件满足 WCAG A11y 要求（role="log"、aria-live="polite"、role="alert"）。
-- 页面编排保留 Story 3.3 的 selectedContext 展示与恢复提示，回归保护完整。
-- E2E 测试覆盖消息追加、In-flow 注入、流式渲染、思考折叠、A11y、桌面断点与回归。
-- code-review 修复：补充 `ai.thinking` 事件订阅入口，消除 AC3“仅定义未接线”风险。
-- code-review 修复：In-flow 文案改为可读文本，不再直接渲染内部 key。
-- code-review 修复：对话 store 增加 `recoveryHintVisible` 并在 UI 中展示恢复提示。
-- code-review 修复：对话面板自动滚动策略改为监听最后一条消息内容变化，覆盖 streaming 增量场景。
-- code-review 修复：E2E AC3 改为真实 streaming 状态断言，移除“仅有 AI 消息即通过”的假阳性路径。
-- 质量校验：ESLint 0 问题、Next build + TypeScript 检查通过。
+- 已为 Story 3.4 生成可直接用于 `dev-story` 的完整实施上下文。
+- 已将 In-flow Updates 与可访问性作为强制交付项，而非可选增强项。
+- 已限定故事边界，避免与 Story 3.5（输入区与下一步引导）范围重叠。
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/3-4-conversation-flow-in-flow-updates.md` (modified)
+- `_bmad-output/implementation-artifacts/3-4-conversation-flow-in-flow-updates.md` (new)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)
-- `frontend/app-web/src/lib/workflow/workflow-conversation.ts` (new)
-- `frontend/app-web/src/lib/workflow/workflow-conversation-store.ts` (new)
-- `frontend/app-web/src/lib/workflow/workflow-conversation-events.ts` (new)
-- `frontend/app-web/src/components/workspace/ConversationStreamPanel.tsx` (new)
-- `frontend/app-web/src/components/workspace/ConversationMessageItem.tsx` (new)
-- `frontend/app-web/src/components/workspace/ThinkingProcess.tsx` (new)
-- `frontend/app-web/src/components/workspace/hooks/useWorkspaceConversation.ts` (new)
-- `frontend/app-web/src/app/[locale]/workspace/[workspaceId]/page.tsx` (modified)
-- `frontend/app-web/messages/zh-CN.json` (modified)
-- `frontend/app-web/messages/en.json` (modified)
-- `frontend/app-web/e2e/workspace-conversation-flow.spec.ts` (new)
-
-### Additional Working Tree Notes
-
-- 以下文件在本次 code-review 期间处于已修改状态，但不属于 Story 3.4 实现范围：
-  - `README.md`
-  - `backend/.env`
-  - `backend/.env.example`
-  - `backend/app-api/src/api/app/main.py`
-  - `frontend/app-web/e2e/workspace-delete.spec.ts`
-  - `frontend/app-web/e2e/workspace-epic-story-tree.spec.ts`
-  - `frontend/app-web/e2e/workspace-shell.spec.ts`
-  - `frontend/app-web/e2e/workspace-workflow-steps.spec.ts`
-  - `frontend/app-web/package.json`
-  - `frontend/app-web/playwright.config.ts`
-  - `frontend/app-web/src/lib/api-client.ts`
-
-### Senior Developer Review (AI)
-
-- Review Date: 2026-02-25
-- Outcome: Changes Requested -> Fixed
-- Findings Fixed:
-  - Task 6 分级错误反馈未落地：已补齐 UI 消费路径与文案使用。
-  - 对话恢复提示缺失：已实现 store 恢复标记与面板提示。
-  - AC3 流式路径未接线：已增加 `ai.thinking` 事件订阅通路。
-  - AC3 测试假阳性：已改为真实 streaming 状态断言。
-  - In-flow 文案可读性不足：已改为用户可读文本。
-  - 自动滚动未覆盖 delta：已按最后消息内容变化触发滚动。
-  - git/story 透明性缺口：已记录“非 Story 范围”工作树变更清单。
-
-### Change Log
-
-- 2026-02-25: Senior code-review completed; fixed all High/Medium findings for Story 3.4 and verified with lint/build.
