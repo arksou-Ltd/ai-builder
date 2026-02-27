@@ -7,7 +7,7 @@
  * - 响应拦截器：解析 Result[T] 统一结构，提取 data 或抛出业务错误
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 /** 后端 Result[T] 统一响应结构 */

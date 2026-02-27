@@ -74,7 +74,7 @@ uv sync
 ```bash
 # 后端开发服务器
 cd backend
-uv run --package app-api uvicorn api.app.main:app --reload --host 0.0.0.0 --port 8000
+uv run --package app-api uvicorn api.app.main:app --reload --host 0.0.0.0 --port 8001
 
 # 前端开发服务器
 cd frontend/app-web
@@ -93,7 +93,7 @@ uv run --package app-api --extra dev pytest app-api/tests/ -v
 ### 健康检查
 
 ```bash
-curl http://localhost:8000/api/health
+curl http://localhost:8001/api/health
 ```
 
 ## 技术栈

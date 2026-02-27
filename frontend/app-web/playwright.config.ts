@@ -2,8 +2,8 @@
  * Playwright E2E 测试配置
  *
  * 前置条件：
- * 1. 后端服务运行中 (localhost:8000)
- * 2. 前端开发服务器运行中 (localhost:3000)
+ * 1. 后端服务运行中 (localhost:8001)
+ * 2. 前端开发服务器运行中 (localhost:3001)
  *
  * 运行方式：
  *   首次：npx playwright test --project=setup --headed  (手动登录保存认证态)
@@ -26,7 +26,7 @@ export default defineConfig({
   timeout: 30_000,
 
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: process.env.BASE_URL || "http://localhost:3001",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

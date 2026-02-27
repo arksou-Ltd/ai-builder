@@ -9,8 +9,8 @@
  *
  * 前置条件：
  * - 已执行 auth.setup.ts 生成认证状态文件
- * - 前端开发服务器运行中 (localhost:3000)
- * - 后端服务运行中 (localhost:8000)
+ * - 前端开发服务器运行中 (localhost:3001)
+ * - 后端服务运行中 (localhost:8001)
  * - 至少存在一个工作空间
  *
  * No Mock Policy: 禁止 mock/stub/fake/spy 与网络拦截替身
