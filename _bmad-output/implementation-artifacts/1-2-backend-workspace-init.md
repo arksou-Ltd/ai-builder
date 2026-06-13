@@ -65,7 +65,7 @@ so that 我可以基于统一的 Python workspace 与模块结构开始后端开
 - 测试规范：禁止 Mock/Stub/Fake，后端测试使用 pytest + testcontainers（本 Story 不要求新增测试，但结构需预留）。
 - 参考 `ai-native` 后端：使用 uv workspace + PEP 420 命名空间包，但本项目移除 `agent-kernel`。
 - `core/clerk.py` 在后续 Epic 2 认证相关 Story 中创建，本 Story 不需要。
-- 依赖安装前置条件（SSH）：确保已配置 SSH key 并加入 GitHub/GitLab；如使用别名，需在 `~/.ssh/config` 中配置 `github-arksou`；首次拉取可能需要确认主机指纹。
+- 依赖安装前置条件（SSH）：确保已配置 SSH key 并加入 GitHub/GitLab；如使用别名，需在 `~/.ssh/config` 中配置 `github.com`；首次拉取可能需要确认主机指纹。
 - 完成后检查：确保新建文件全部 `git add`，并验证 `.gitignore` 已包含 Python 忽略规则（`__pycache__/`、`.venv/`、`*.pyc`、`.pytest_cache/`）。
 
 ### 骨架代码参考（仅示意）
@@ -186,7 +186,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "<release-tag>" }
+arksou-kernel-framework = { git = "ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git", tag = "<release-tag>" }
 
 [build-system]
 requires = ["hatchling"]

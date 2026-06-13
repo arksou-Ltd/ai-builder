@@ -291,7 +291,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "<release-tag>" }
+arksou-kernel-framework = { git = "ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git", tag = "<release-tag>" }
 
 [build-system]
 requires = ["hatchling"]
@@ -418,7 +418,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-arksou-kernel-framework = { git = "ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git", tag = "<release-tag>" }
+arksou-kernel-framework = { git = "ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git", tag = "<release-tag>" }
 ```
 
 #### app-api/pyproject.toml

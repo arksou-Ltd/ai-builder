@@ -55,11 +55,11 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
 - 本 Story 的核心是“依赖链与边界”而不是新增业务代码；尽量只修改依赖与 workspace 配置，避免无关重构。
 - 依赖链路（必须满足）：`app-api → common-kernel → arksou-kernel-framework[all] <release-version>`。
 - Git SSH 依赖注意事项（**本仓库最容易踩坑点**）：
-  - `arksou-kernel-framework` 必须通过 Git SSH 源拉取：`ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git`（tag 为有效发行版标签）。
-  - 这里的 `github-arksou` 不是 GitHub 官方域名，而是 **SSH Host 别名**：uv/git 会读取 `~/.ssh/config`，通过该别名选择端口与密钥（否则会用错 key 或连不上）。
-  - **本机现状校验结果（2026-02-04）：** 已存在 `Host github-arksou`，并配置为 `Hostname ssh.github.com` + `Port 443` + `User git` + `IdentityFile ~/.ssh/id_rsa_arksou`，因此上述 Git URL 在本机可直接使用。
+  - `arksou-kernel-framework` 必须通过 Git SSH 源拉取：`ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git`（tag 为有效发行版标签）。
+  - 这里的 `github.com` 不是 GitHub 官方域名，而是 **SSH Host 别名**：uv/git 会读取 `~/.ssh/config`，通过该别名选择端口与密钥（否则会用错 key 或连不上）。
+  - **本机现状校验结果（2026-02-04）：** 已存在 `Host github.com`，并配置为 `Hostname ssh.github.com` + `Port 443` + `User git` + `IdentityFile ~/.ssh/id_rsa_arksou`，因此上述 Git URL 在本机可直接使用。
   - 如在其他机器/CI 上失败，优先补齐下面这段最小配置（保持与本机一致）：
-    - `Host github-arksou`
+    - `Host github.com`
     - `  HostName ssh.github.com`
     - `  Port 443`
     - `  User git`
@@ -128,7 +128,7 @@ so that 我可以按架构约束进行模块化开发且避免循环依赖。
 
 ## Latest Technical Information
 
-- 无新增；如遇 Git 拉取失败，优先按 “Dev Notes → Git SSH 依赖注意事项” 排查 `~/.ssh/config` 的 `Host github-arksou` 别名配置。
+- 无新增；如遇 Git 拉取失败，优先按 “Dev Notes → Git SSH 依赖注意事项” 排查 `~/.ssh/config` 的 `Host github.com` 别名配置。
 
 ## Project Context Reference
 

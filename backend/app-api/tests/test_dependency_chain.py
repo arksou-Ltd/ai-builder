@@ -142,8 +142,8 @@ class TestDependencySourceConfiguration:
         assert "git" in framework_source, (
             "arksou-kernel-framework must use git source"
         )
-        assert "ssh://git@github-arksou" in framework_source["git"], (
-            "arksou-kernel-framework must use Git SSH source (ssh://git@github-arksou)"
+        assert "ssh://git@github.com" in framework_source["git"], (
+            "arksou-kernel-framework must use Git SSH source (ssh://git@github.com)"
         )
         assert framework_source.get("tag") == expected_tag, (
             f"arksou-kernel-framework must be pinned to tag {expected_tag}, "
@@ -183,8 +183,8 @@ class TestDependencySourceConfiguration:
         )
 
         # Verify Git SSH source (not PyPI registry)
-        # uv.lock format: source = { git = "ssh://git@github-arksou/..." }
-        assert 'git = "ssh://git@github-arksou' in content, (
+        # uv.lock format: source = { git = "ssh://git@github.com/..." }
+        assert 'git = "ssh://git@github.com' in content, (
             "arksou-kernel-framework must come from Git SSH source in uv.lock"
         )
 

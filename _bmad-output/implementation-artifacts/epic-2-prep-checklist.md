@@ -22,7 +22,7 @@ Owner: Dana（QA Engineer）
 3) 依赖链与 SSH 环境规范化文档
 Owner: Charlie（Senior Dev）
 验收标准：
-- 文档包含 `github-arksou` 的最小 `~/.ssh/config` 配置
+- 文档包含 `github.com` 的最小 `~/.ssh/config` 配置
 - 说明首次拉取 `known_hosts` 处理方式
 - 新机器可按文档一次成功完成 `uv sync` 与依赖验证
 

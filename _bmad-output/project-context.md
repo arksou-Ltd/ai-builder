@@ -26,7 +26,7 @@ Next.js `16.1.6` (App Router) · React `19.2.3` · TypeScript `^5` · Clerk `^6.
 
 ### Framework Baseline
 `common-kernel` → `arksou-kernel-framework[all]` (rdbms + cache + security + jwks + clerk + webhook)
-固定来源: `ssh://git@github-arksou/arksou-Ltd/arksou-kernel-framework.git` · 固定标签: `v0.4.0`
+固定来源: `ssh://git@github.com/arksou-Ltd/arksou-kernel-framework.git` · 固定标签: `v0.4.0`
 
 ### Critical Version Constraints
 - 禁止将框架切换为 PyPI 来源或浮动分支
